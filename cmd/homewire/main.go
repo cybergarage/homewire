@@ -22,6 +22,7 @@ import (
 	"flag"
 	"fmt"
 	"io"
+	"io/fs"
 	"log/slog"
 	"os"
 	"path/filepath"
@@ -48,6 +49,10 @@ const (
 // systemDataDir is the data directory of the system service, which the
 // commands other than serve use when the user has none; tests change it.
 var systemDataDir = "/var/lib/homewire"
+
+// serviceGroup is the group of the system service, whose members may use its
+// data directory.
+const serviceGroup = "homewire"
 
 // command is a subcommand of homewire.
 type command struct {
@@ -195,10 +200,21 @@ func resolveClientDataDir(dir string) (string, error) {
 	candidates = append(candidates, systemDataDir)
 	// A data directory with a running hub comes first: the user's own may
 	// be left from running homewire serve by hand while the service runs.
+	// A data directory which this user may not read, such as the
+	// service's to a user not yet in its group, may hold a running hub:
+	// it is taken then, so that the error tells how to get access.
+	denied := ""
 	for _, c := range candidates {
-		if _, err := os.Stat(filepath.Join(c, serveInfoFileName)); err == nil {
+		_, err := os.Stat(filepath.Join(c, serveInfoFileName))
+		if err == nil {
 			return c, nil
 		}
+		if errors.Is(err, fs.ErrPermission) && denied == "" {
+			denied = c
+		}
+	}
+	if denied != "" {
+		return denied, nil
 	}
 	if homeErr == nil {
 		for _, name := range []string{defaultDataDirName, legacyDataDirName} {
