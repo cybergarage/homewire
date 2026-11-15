@@ -61,7 +61,7 @@ Always build with `make build`: a plain `go build` embeds whatever is left in `w
 | `homewire token` | Prints the access token, for scripts which call the API |
 | `homewire version` | Prints the version |
 
-`open`, `status` and `token` take `-data-dir` too, and find the running hub through `serve.json`, which `homewire serve` writes into the data directory while it runs. Without `-data-dir`, they use `~/.homewire` (or `~/.go-matter-hub`), or else `/var/lib/homewire`, the data directory of the system service.
+`open`, `status` and `token` take `-data-dir` too, and find the running hub through `serve.json`, which `homewire serve` writes into the data directory while it runs. Without `-data-dir` (or `HOMEWIRE_DATA_DIR`), they use the first of `~/.homewire`, `~/.go-matter-hub` and `/var/lib/homewire`, the data directory of the system service, in which a hub is running; when none is, the first which exists.
 
 `homewire serve` takes these options:
 

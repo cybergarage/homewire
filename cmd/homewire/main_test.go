@@ -117,7 +117,7 @@ func TestOptionsFromTheEnvironment(t *testing.T) {
 }
 
 // The commands which use a running hub find the data directory of the
-// system service when the user has none.
+// system service when the user has none, or when only the service runs.
 func TestClientDataDir(t *testing.T) {
 	home := t.TempDir()
 	t.Setenv("HOME", home)
@@ -139,6 +139,19 @@ func TestClientDataDir(t *testing.T) {
 	}
 	if got, _ := resolveClientDataDir(""); got != filepath.Join(home, defaultDataDirName) {
 		t.Fatalf("with the user's too: %q", got)
+	}
+	// A running hub wins: the service's, while the user's is idle.
+	if err := os.WriteFile(filepath.Join(systemDataDir, serveInfoFileName), []byte("{}"), 0o640); err != nil {
+		t.Fatal(err)
+	}
+	if got, _ := resolveClientDataDir(""); got != systemDataDir {
+		t.Fatalf("with the service running: %q", got)
+	}
+	if err := os.WriteFile(filepath.Join(home, defaultDataDirName, serveInfoFileName), []byte("{}"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if got, _ := resolveClientDataDir(""); got != filepath.Join(home, defaultDataDirName) {
+		t.Fatalf("with both running: %q", got)
 	}
 	if got, _ := resolveClientDataDir("/srv/hub"); got != "/srv/hub" {
 		t.Fatalf("given: %q", got)
