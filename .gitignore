@@ -1,5 +1,6 @@
 # Build output
 /bin/
+/dist/
 
 # The built web UI is embedded at build time; only the placeholder is kept.
 /web/dist/*

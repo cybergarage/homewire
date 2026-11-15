@@ -15,5 +15,6 @@
 // Package version holds the version of homewire.
 package version
 
-// Version is the version of this build.
-const Version = "0.1.0-dev"
+// Version is the version of this build. A release build sets it with
+// -ldflags "-X github.com/cybergarage/homewire/internal/version.Version=...".
+var Version = "0.1.0-dev"

@@ -1,0 +1,47 @@
+[Unit]
+Description=homewire Matter hub
+Documentation=https://github.com/cybergarage/homewire
+Wants=network-online.target bluetooth.target
+After=network-online.target bluetooth.target
+
+[Service]
+Type=simple
+User=homewire
+Group=homewire
+# /var/lib/homewire: the fabric, the commissioned nodes and the access token.
+# Mode 0750 lets the members of the homewire group run homewire open, status
+# and token; the fabric's keys stay readable by the homewire user only.
+StateDirectory=homewire
+StateDirectoryMode=0750
+UMask=0027
+Environment=HOMEWIRE_DATA_DIR=/var/lib/homewire
+EnvironmentFile=-/etc/default/homewire
+ExecStart=/usr/bin/homewire serve
+Restart=on-failure
+RestartSec=5
+
+# Hardening. Bluetooth is reached through BlueZ over D-Bus; mDNS needs
+# multicast on the local network.
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectKernelLogs=yes
+ProtectControlGroups=yes
+ProtectClock=yes
+ProtectHostname=yes
+RestrictNamespaces=yes
+RestrictRealtime=yes
+RestrictSUIDSGID=yes
+LockPersonality=yes
+MemoryDenyWriteExecute=yes
+SystemCallArchitectures=native
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6 AF_NETLINK AF_BLUETOOTH
+CapabilityBoundingSet=
+AmbientCapabilities=
+
+[Install]
+WantedBy=multi-user.target
