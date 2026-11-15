@@ -187,8 +187,20 @@ func resolveClientDataDir(dir string) (string, error) {
 	if dir != "" {
 		return dir, nil
 	}
-	home, err := os.UserHomeDir()
-	if err == nil {
+	home, homeErr := os.UserHomeDir()
+	var candidates []string
+	if homeErr == nil {
+		candidates = append(candidates, filepath.Join(home, defaultDataDirName), filepath.Join(home, legacyDataDirName))
+	}
+	candidates = append(candidates, systemDataDir)
+	// A data directory with a running hub comes first: the user's own may
+	// be left from running homewire serve by hand while the service runs.
+	for _, c := range candidates {
+		if _, err := os.Stat(filepath.Join(c, serveInfoFileName)); err == nil {
+			return c, nil
+		}
+	}
+	if homeErr == nil {
 		for _, name := range []string{defaultDataDirName, legacyDataDirName} {
 			if fi, err := os.Stat(filepath.Join(home, name)); err == nil && fi.IsDir() {
 				return defaultDataDir(home), nil
@@ -198,8 +210,8 @@ func resolveClientDataDir(dir string) (string, error) {
 	if fi, err := os.Stat(systemDataDir); err == nil && fi.IsDir() {
 		return systemDataDir, nil
 	}
-	if err != nil {
-		return "", fmt.Errorf("no home directory for the data directory; give -data-dir: %w", err)
+	if homeErr != nil {
+		return "", fmt.Errorf("no home directory for the data directory; give -data-dir: %w", homeErr)
 	}
 	return defaultDataDir(home), nil
 }
