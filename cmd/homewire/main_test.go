@@ -17,6 +17,7 @@ package main
 import (
 	"bytes"
 	"errors"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"strings"
@@ -159,5 +160,46 @@ func TestClientDataDir(t *testing.T) {
 	// serve never uses the service's.
 	if got, _ := resolveDataDir(""); got != filepath.Join(home, defaultDataDirName) {
 		t.Fatalf("serve: %q", got)
+	}
+}
+
+// A user who may not read the service's data directory is told how to be
+// given access, instead of being sent to a data directory of their own.
+func TestClientDataDirPermission(t *testing.T) {
+	err := permissionHint(systemDataDir, &fs.PathError{Op: "open", Path: filepath.Join(systemDataDir, serveInfoFileName), Err: fs.ErrPermission})
+	if err == nil || !errors.Is(err, fs.ErrPermission) || !strings.Contains(err.Error(), "sudo adduser $USER homewire") {
+		t.Fatalf("permissionHint = %v", err)
+	}
+	other := &fs.PathError{Op: "open", Path: "/srv/hub/serve.json", Err: fs.ErrPermission}
+	if err := permissionHint("/srv/hub", other); err != error(other) {
+		t.Fatalf("permissionHint for another directory = %v", err)
+	}
+
+	if os.Geteuid() == 0 {
+		t.Skip("root may read any directory")
+	}
+	home := t.TempDir()
+	t.Setenv("HOME", home)
+	saved := systemDataDir
+	t.Cleanup(func() { systemDataDir = saved })
+	systemDataDir = filepath.Join(t.TempDir(), "homewire")
+	if err := os.Mkdir(filepath.Join(home, defaultDataDirName), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Mkdir(systemDataDir, 0o700); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(systemDataDir, serveInfoFileName), []byte("{}"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Chmod(systemDataDir, 0); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = os.Chmod(systemDataDir, 0o700) })
+	if got, _ := resolveClientDataDir(""); got != systemDataDir {
+		t.Fatalf("with the service's not readable: %q, want %q", got, systemDataDir)
+	}
+	if _, err := readServeInfo(systemDataDir); err == nil || !strings.Contains(err.Error(), "sudo adduser") {
+		t.Fatalf("readServeInfo = %v", err)
 	}
 }

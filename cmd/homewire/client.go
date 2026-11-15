@@ -55,7 +55,7 @@ func readToken(dataDir string) (string, error) {
 	path := filepath.Join(dataDir, tokenFileName)
 	b, err := os.ReadFile(path)
 	if err != nil {
-		return "", fmt.Errorf("access token: %w", err)
+		return "", fmt.Errorf("access token: %w", permissionHint(dataDir, err))
 	}
 	token := strings.TrimSpace(string(b))
 	if token == "" {

@@ -129,7 +129,16 @@ func readServeInfo(dir string) (serveInfo, error) {
 	if errors.Is(err, fs.ErrNotExist) {
 		return info, fmt.Errorf("%w with the data directory %s; start it with \"%s serve\"", errNotRunning, dir, commandName)
 	}
-	return info, err
+	return info, permissionHint(dir, err)
+}
+
+// permissionHint adds to an error reading the data directory of the system
+// service how to be given access to it.
+func permissionHint(dir string, err error) error {
+	if err == nil || !errors.Is(err, fs.ErrPermission) || filepath.Clean(dir) != filepath.Clean(systemDataDir) {
+		return err
+	}
+	return fmt.Errorf("%w; the members of the group %s may read it: run \"sudo adduser $USER %s\", then sign in again", err, serviceGroup, serviceGroup)
 }
 
 func readServeInfoFile(path string) (serveInfo, error) {
