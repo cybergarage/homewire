@@ -53,6 +53,18 @@ const (
 	CommissioningFailed CommissioningState = "failed"
 )
 
+// CommissioningStep is a stage a commissioning has reached: one of
+// discovering, connecting, pase, attestation, credentials, network,
+// operationalDiscovery, case and complete, in that order (go-matter's
+// CommissioningStage). Attempt counts the attempts of discovering,
+// operationalDiscovery and case. Detail, for case, holds the addresses
+// tried. It holds no secret.
+type CommissioningStep struct {
+	Stage   string `json:"stage"`
+	Attempt int    `json:"attempt"`
+	Detail  string `json:"detail,omitempty"`
+}
+
 // Commissioning is a commissioning started from the hub, as its clients
 // see it. It holds neither the setup code nor the Wi-Fi password.
 type Commissioning struct {
@@ -63,6 +75,9 @@ type Commissioning struct {
 	OverBluetooth bool      `json:"overBluetooth"`
 	StartedAt     time.Time `json:"startedAt"`
 	FinishedAt    time.Time `json:"finishedAt,omitzero"`
+	// Step is the last stage reached, the one at which a failed
+	// commissioning failed; nil before the first.
+	Step *CommissioningStep `json:"step,omitempty"`
 	// NodeID is the node the device became, once commissioned.
 	NodeID uint64 `json:"-"`
 	// Error and ErrorCode say why a commissioning failed. ErrorCode is one
@@ -126,10 +141,28 @@ func (h *Hub) StartCommissioning(code string, wifi *WiFiCredentials) (Commission
 		defer h.wg.Done()
 		ctx, cancel := context.WithTimeout(ctx, CommissioningTimeout)
 		defer cancel()
-		rec, err := h.ctl.Commission(ctx, payload, wifi)
+		rec, err := h.ctl.Commission(ctx, payload, wifi, func(step CommissioningStep) {
+			h.commissioningStep(job, step)
+		})
 		h.finishCommissioning(job, rec, err)
 	}()
 	return snapshot, nil
+}
+
+// commissioningStep records the stage a commissioning has reached, and
+// tells the listeners.
+func (h *Hub) commissioningStep(job *Commissioning, step CommissioningStep) {
+	h.mu.Lock()
+	if job.State != CommissioningRunning {
+		h.mu.Unlock()
+		return
+	}
+	job.Step = &step
+	snapshot := *job
+	h.mu.Unlock()
+
+	h.log.Info("commissioning step", "id", job.ID, "stage", step.Stage, "attempt", step.Attempt, "detail", step.Detail)
+	h.notify(Change{Kind: ChangeCommissioning, Commissioning: &snapshot})
 }
 
 func (h *Hub) finishCommissioning(job *Commissioning, rec NodeRecord, err error) {

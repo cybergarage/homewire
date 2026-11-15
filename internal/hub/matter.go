@@ -211,11 +211,16 @@ func (c *MatterController) Nodes() ([]NodeRecord, error) {
 
 // Commission commissions a device into the fabric. 5.5. Commissioning
 // Flows.
-func (c *MatterController) Commission(ctx context.Context, payload encoding.OnboardingPayload, wifi *WiFiCredentials) (NodeRecord, error) {
+func (c *MatterController) Commission(ctx context.Context, payload encoding.OnboardingPayload, wifi *WiFiCredentials, progress func(CommissioningStep)) (NodeRecord, error) {
 	if c.cmr == nil {
 		return NodeRecord{}, ErrNotStarted
 	}
 	var opts []matter.CommissionOption
+	if progress != nil {
+		opts = append(opts, matter.WithCommissioningProgress(func(p matter.CommissioningProgress) {
+			progress(CommissioningStep{Stage: string(p.Stage), Attempt: p.Attempt, Detail: p.Detail})
+		}))
+	}
 	if wifi != nil {
 		opts = append(opts, config.NewWiFiNetworkConfig(
 			config.WithSSID([]byte(wifi.SSID)),

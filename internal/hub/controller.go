@@ -46,8 +46,9 @@ type Controller interface {
 	// fabric, and returns the record the store keeps of it. wifi is nil
 	// for a device already on the network. The errors wrap
 	// ErrDeviceNotFound, ErrWiFiRequired or ErrNotInCommissioningMode
-	// where they apply.
-	Commission(ctx context.Context, payload encoding.OnboardingPayload, wifi *WiFiCredentials) (NodeRecord, error)
+	// where they apply. progress, when not nil, is told each stage the
+	// commissioning reaches.
+	Commission(ctx context.Context, payload encoding.OnboardingPayload, wifi *WiFiCredentials, progress func(CommissioningStep)) (NodeRecord, error)
 	// Forget deletes the record the store keeps of a node. A node of which
 	// there is no record is not an error.
 	Forget(nodeID uint64) error

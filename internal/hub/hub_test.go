@@ -42,8 +42,10 @@ type fakeController struct {
 	// commissionResults answers the commissionings.
 	commissionResults chan commissionResult
 	commissions       []commissionCall
-	forgotten         []uint64
-	forgetErr         error
+	// commissionSteps are told to the progress of each commissioning.
+	commissionSteps []CommissioningStep
+	forgotten       []uint64
+	forgetErr       error
 }
 
 func newFakeController(records ...NodeRecord) *fakeController {
@@ -114,11 +116,17 @@ func (c *fakeController) Connect(_ context.Context, nodeID uint64) (Session, err
 
 // Commission blocks until the test answers on commissionResults, or the
 // context ends; a success adds the node to the store's records.
-func (c *fakeController) Commission(ctx context.Context, payload encoding.OnboardingPayload, wifi *WiFiCredentials) (NodeRecord, error) {
+func (c *fakeController) Commission(ctx context.Context, payload encoding.OnboardingPayload, wifi *WiFiCredentials, progress func(CommissioningStep)) (NodeRecord, error) {
 	c.mu.Lock()
 	c.commissions = append(c.commissions, commissionCall{discriminator: uint16(payload.Discriminator()), wifi: wifi})
 	results := c.commissionResults
+	steps := c.commissionSteps
 	c.mu.Unlock()
+	for _, step := range steps {
+		if progress != nil {
+			progress(step)
+		}
+	}
 	select {
 	case <-ctx.Done():
 		return NodeRecord{}, ctx.Err()
