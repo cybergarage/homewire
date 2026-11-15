@@ -33,7 +33,7 @@ curl -fsS "$url/api/v1/health"
 echo
 
 echo "== data directory"
-sudo stat -c '%U:%G %a %n' /var/lib/homewire /var/lib/homewire/*
+sudo sh -c "stat -c '%U:%G %a %n' /var/lib/homewire /var/lib/homewire/*"
 [ "$(sudo stat -c '%U:%G %a' /var/lib/homewire)" = "homewire:homewire 750" ] || fail "unexpected owner or mode of /var/lib/homewire"
 [ "$(sudo stat -c '%a' /var/lib/homewire/fabric.json)" = "600" ] || fail "fabric.json is not mode 0600"
 [ "$(sudo stat -c '%a' /var/lib/homewire/serve.json)" = "640" ] || fail "serve.json is not mode 0640"
