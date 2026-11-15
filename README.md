@@ -15,9 +15,32 @@ The hub keeps a fabric of its own, connects to the nodes commissioned into it, f
 | B3 | Read API (nodes, state) and live updates over Server-Sent Events; device list | Done |
 | B4 | Control API and UI: on/off, level, color | Done |
 | B5 | Commissioning from the UI | Done |
-| B6 | systemd unit, configuration file, key store | Planned |
+| B6 | systemd service, configuration file, .deb packages | Done; a key store is deferred |
 
 Automation and remote access are out of scope for now.
+
+## Install
+
+Releases on GitHub carry .deb packages for amd64 and arm64 (Debian or Ubuntu with systemd; CI tests the package on Ubuntu). The package installs `homewire` as a systemd service, `homewire.service`, and starts it:
+
+```sh
+sudo apt install ./homewire_<version>_amd64.deb
+systemctl status homewire
+journalctl -u homewire -f       # the hub's log
+```
+
+- **User.** The service runs as the system user `homewire`, created by the package. It is added to the group `bluetooth` when that group exists, so that it may use the Bluetooth adapter through BlueZ (package `bluez`, recommended).
+- **Data.** The fabric, the commissioned nodes and the access token are kept in `/var/lib/homewire` (mode 0750, group `homewire`).
+- **Options.** `/etc/default/homewire` gives the options of `homewire serve`, as `HOMEWIRE_` variables; see [Build and run](#build-and-run). By default the hub listens on `127.0.0.1:8580`, this host only; set `HOMEWIRE_LISTEN=0.0.0.0:8580` to reach it from other machines, then restart it with `sudo systemctl restart homewire`. An upgrade keeps the file.
+- **Commands.** `homewire open`, `status` and `token` read `/var/lib/homewire`, so they need membership of the group `homewire`:
+
+```sh
+sudo adduser $USER homewire     # then sign in again
+homewire status
+homewire open -print
+```
+
+`sudo apt remove homewire` stops the service and keeps its data; `sudo apt purge homewire` deletes `/var/lib/homewire` and the user too. A device commissioned into a purged fabric has to be reset to factory defaults to be added again.
 
 ## Build and run
 
@@ -67,7 +90,7 @@ level=INFO msg="node status" node=0000000016A5E84A status=online
 level=INFO msg="attribute changed" node=0000000016A5E84A endpoint=1 cluster=0x0006 attribute=0x0000 value=true
 ```
 
-`fabric.json` holds the private keys of the fabric, unencrypted, readable by the owner only (mode 0600, in a directory of mode 0700). Whoever can read it can control every device of the hub. A key store is planned (B6).
+`fabric.json` holds the private keys of the fabric, unencrypted, readable by the hub's user only (mode 0600). Whoever can read it, root included, can control every device of the hub. Under the system service, that user is `homewire`, which nothing else runs as. A key store, which would keep the keys encrypted, is not implemented.
 
 ## Adding a device
 
@@ -122,7 +145,7 @@ The hub speaks plain HTTP. On the network, the token (at sign-in and in a bearer
 
 ## Signing a browser in
 
-`homewire open`, run on the host of the hub as the user who runs it, opens the web UI in the default browser, already signed in: nobody types or copies the token.
+`homewire open`, run on the host of the hub as the user who runs it or, for the system service, as a member of the group `homewire`, opens the web UI in the default browser, already signed in: nobody types or copies the token.
 
 ```sh
 homewire open                                  # a browser on this host
@@ -268,6 +291,7 @@ make check-web  # svelte-check
 # UI with hot reload on http://localhost:5173, against a hub on its default address
 go run ./cmd/homewire serve &
 cd web && npm install && npm run dev
+make package    # .deb packages and archives into dist/, with GoReleaser
 ```
 
 The Go binary embeds `web/dist`. Without a built UI the hub still builds and serves the API; the UI path answers with a notice.
@@ -294,6 +318,7 @@ GOWORK=off go build ./... && GOWORK=off go test ./...
 | `internal/hub` | The hub: its fabric, the sessions and subscriptions with the nodes, their state, and the commands sent to them |
 | `internal/auth` | Access token file, bearer and session authentication |
 | `internal/server` | HTTP API, event stream, Host and Origin checks, web UI serving |
+| `packaging` | systemd unit, `/etc/default/homewire`, the package's install scripts, and the test of the installed package run by CI |
 | `web` | Svelte + Vite + TypeScript UI; `web/dist` is embedded |
 
 ## License

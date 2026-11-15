@@ -1,7 +1,7 @@
 BIN := bin/homewire
 PKG := ./...
 
-.PHONY: all web check-web build test run clean
+.PHONY: all web check-web build test run package clean
 
 all: build
 
@@ -23,6 +23,10 @@ test:
 run: build
 	$(BIN) serve
 
+# .deb packages and archives into dist/; needs GoReleaser v2.
+package:
+	goreleaser release --snapshot --clean
+
 clean:
-	rm -rf bin web/node_modules
+	rm -rf bin dist web/node_modules
 	find web/dist -mindepth 1 ! -name .gitkeep -delete

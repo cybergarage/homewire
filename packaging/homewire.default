@@ -1,0 +1,20 @@
+# Options of the homewire service (homewire serve). Each option of
+# homewire serve can be given here as HOMEWIRE_ and its name in capitals,
+# with _ for -. Restart the service after a change:
+#
+#   sudo systemctl restart homewire
+
+# Address to listen on. The default, 127.0.0.1:8580, reaches the hub from
+# this host only. To reach it from other hosts, listen on all interfaces;
+# browsers then need the access token (homewire token or homewire open).
+#HOMEWIRE_LISTEN=0.0.0.0:8580
+
+# Host names by which browsers may reach the hub, separated by commas or
+# spaces. IP addresses and localhost are always allowed.
+#HOMEWIRE_ALLOWED_HOST=myhost.local
+
+# Require the access token on the loopback interface too.
+#HOMEWIRE_REQUIRE_AUTH=true
+
+# debug, info, warn or error.
+#HOMEWIRE_LOG_LEVEL=info

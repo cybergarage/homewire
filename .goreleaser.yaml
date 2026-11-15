@@ -1,0 +1,96 @@
+# Release builds of homewire: GoReleaser builds the hub for Linux on amd64 and
+# arm64 and packages it as .deb with the systemd service.
+#
+#   goreleaser release --snapshot --clean   # a local build into dist/
+version: 2
+
+project_name: homewire
+
+before:
+  hooks:
+    # The hub embeds the web UI from web/dist.
+    - make web
+
+builds:
+  - id: homewire
+    main: ./cmd/homewire
+    binary: homewire
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+    goarch:
+      - amd64
+      - arm64
+    flags:
+      - -trimpath
+    ldflags:
+      - -s -w -X github.com/cybergarage/homewire/internal/version.Version={{ .Version }}
+
+archives:
+  - id: homewire
+    formats:
+      - tar.gz
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    files:
+      - LICENSE
+      - README.md
+
+nfpms:
+  - id: homewire
+    package_name: homewire
+    file_name_template: "{{ .PackageName }}_{{ .Version }}_{{ .Arch }}"
+    homepage: https://github.com/cybergarage/homewire
+    maintainer: Satoshi Konno <skonno@cybergarage.org>
+    description: |-
+      Matter hub with a web UI.
+      homewire commissions Matter devices over Bluetooth or the local network
+      into a fabric of its own, follows their attributes and controls them
+      from a browser.
+    license: Apache-2.0
+    section: net
+    priority: optional
+    formats:
+      - deb
+    bindir: /usr/bin
+    dependencies:
+      - adduser
+      - init-system-helpers
+    recommends:
+      - bluez
+    contents:
+      - src: packaging/homewire.service
+        dst: /usr/lib/systemd/system/homewire.service
+        file_info:
+          mode: 0644
+      - src: packaging/homewire.default
+        dst: /etc/default/homewire
+        type: config|noreplace
+        file_info:
+          mode: 0644
+      - src: README.md
+        dst: /usr/share/doc/homewire/README.md
+        file_info:
+          mode: 0644
+      - src: LICENSE
+        dst: /usr/share/doc/homewire/copyright
+        file_info:
+          mode: 0644
+    scripts:
+      postinstall: packaging/scripts/postinstall.sh
+      preremove: packaging/scripts/preremove.sh
+      postremove: packaging/scripts/postremove.sh
+
+checksum:
+  name_template: checksums.txt
+
+snapshot:
+  version_template: "{{ incpatch .Version }}~dev.{{ .ShortCommit }}"
+
+changelog:
+  use: github-native
+
+release:
+  # The release is left as a draft, to be checked and published by hand.
+  draft: true
+  prerelease: auto
