@@ -71,13 +71,10 @@ func (n nodeStatus) name() string {
 func statusCommand(args []string) error {
 	fs := newFlagSet("status", "prints the state of the running hub and of its nodes")
 	dataDir := dataDirFlag(fs)
-	if err := fs.Parse(args); err != nil {
+	if err := parseFlags(fs, args); err != nil {
 		return err
 	}
-	if fs.NArg() != 0 {
-		return fmt.Errorf("unexpected argument: %s", fs.Arg(0))
-	}
-	dir, err := resolveDataDir(*dataDir)
+	dir, err := resolveClientDataDir(*dataDir)
 	if err != nil {
 		return err
 	}

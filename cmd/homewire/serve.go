@@ -65,11 +65,8 @@ func parseServeOptions(args []string) (serveOptions, error) {
 	logLevel := fs.String("log-level", "info", "log level: debug, info, warn or error")
 	fs.Var(&o.allowedHosts, "allowed-host", "host name by which browsers may reach the hub (repeatable); IP addresses and localhost are always allowed")
 	fs.BoolVar(&o.requireAuth, "require-auth", false, "require the access token on the loopback interface too")
-	if err := fs.Parse(args); err != nil {
+	if err := parseFlags(fs, args, "allowed-host"); err != nil {
 		return o, err
-	}
-	if fs.NArg() != 0 {
-		return o, fmt.Errorf("unexpected argument: %s", fs.Arg(0))
 	}
 	o.dataDir = *dataDir
 	// Base 0: 0x-prefixed hexadecimal, or decimal.

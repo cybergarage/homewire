@@ -30,13 +30,10 @@ func openCommand(args []string) error {
 	dataDir := dataDirFlag(fs)
 	printOnly := fs.Bool("print", false, "print the link instead of opening a browser, for a browser on another machine")
 	host := fs.String("host", "", "host name or address of the hub in the link (default: this host's loopback address; with -print, its .local name)")
-	if err := fs.Parse(args); err != nil {
+	if err := parseFlags(fs, args); err != nil {
 		return err
 	}
-	if fs.NArg() != 0 {
-		return fmt.Errorf("unexpected argument: %s", fs.Arg(0))
-	}
-	dir, err := resolveDataDir(*dataDir)
+	dir, err := resolveClientDataDir(*dataDir)
 	if err != nil {
 		return err
 	}

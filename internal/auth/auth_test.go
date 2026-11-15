@@ -278,3 +278,51 @@ func TestSignInCodesAreBounded(t *testing.T) {
 		t.Fatal("the oldest code outlived the bound")
 	}
 }
+
+func TestFileMode(t *testing.T) {
+	for perm, want := range map[os.FileMode]os.FileMode{0o700: 0o600, 0o750: 0o640, 0o710: 0o600, 0o755: 0o600, 0o770: 0o640} {
+		dir := filepath.Join(t.TempDir(), "d")
+		if err := os.Mkdir(dir, perm); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.Chmod(dir, perm); err != nil {
+			t.Fatal(err)
+		}
+		if got := FileMode(dir); got != want {
+			t.Errorf("FileMode(%04o) = %04o, want %04o", perm, got, want)
+		}
+	}
+	if FileMode(filepath.Join(t.TempDir(), "missing")) != 0o600 {
+		t.Error("FileMode of a missing directory is not 0600")
+	}
+}
+
+// In the data directory of the service (0750), the token is created
+// readable by the group, and such a token is accepted; one the group can
+// write is not.
+func TestTokenInAServiceDataDir(t *testing.T) {
+	dir := filepath.Join(t.TempDir(), "homewire")
+	if err := os.Mkdir(dir, 0o750); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Chmod(dir, 0o750); err != nil {
+		t.Fatal(err)
+	}
+	path := filepath.Join(dir, "token")
+	token, created, err := LoadOrCreateToken(path)
+	if err != nil || !created {
+		t.Fatal(created, err)
+	}
+	if fi, _ := os.Stat(path); fi.Mode().Perm() != 0o640 {
+		t.Fatalf("token mode = %04o, want 0640", fi.Mode().Perm())
+	}
+	if again, _, err := LoadOrCreateToken(path); err != nil || again != token {
+		t.Fatalf("reload: %v", err)
+	}
+	if err := os.Chmod(path, 0o660); err != nil {
+		t.Fatal(err)
+	}
+	if _, _, err := LoadOrCreateToken(path); !errors.Is(err, ErrTokenFilePermissions) {
+		t.Fatalf("a token the group can write: %v", err)
+	}
+}
