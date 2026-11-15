@@ -38,7 +38,7 @@ Always build with `make build`: a plain `go build` embeds whatever is left in `w
 | `homewire token` | Prints the access token, for scripts which call the API |
 | `homewire version` | Prints the version |
 
-`open`, `status` and `token` take `-data-dir` too, and find the running hub through `serve.json`, which `homewire serve` writes into the data directory while it runs.
+`open`, `status` and `token` take `-data-dir` too, and find the running hub through `serve.json`, which `homewire serve` writes into the data directory while it runs. Without `-data-dir`, they use `~/.homewire` (or `~/.go-matter-hub`), or else `/var/lib/homewire`, the data directory of the system service.
 
 `homewire serve` takes these options:
 
@@ -50,6 +50,8 @@ Always build with `make build`: a plain `go build` embeds whatever is left in `w
 | `-log-level` | `info` | `debug`, `info`, `warn` or `error`. go-matter's own messages are logged with `component=go-matter`: all of them at `debug` (each step of commissioning and of each session), only its warnings and errors otherwise |
 | `-allowed-host` | | Host name by which browsers may reach the hub; repeatable |
 | `-require-auth` | off | Require the access token on the loopback interface too |
+
+Each option can also be given in the environment, as `HOMEWIRE_` and the option's name in capitals with `_` for `-`: `HOMEWIRE_LISTEN=0.0.0.0:8580`, `HOMEWIRE_DATA_DIR=/var/lib/homewire`. `HOMEWIRE_ALLOWED_HOST` takes a list, separated by commas or spaces. An option on the command line wins over its variable.
 
 ## Fabric and nodes
 
@@ -98,7 +100,8 @@ bin/homewire serve -listen 0.0.0.0:8580
 
 The hub then always requires its **access token**. This cannot be turned off.
 
-- The token is created at the first start, 256 random bits, in `<data-dir>/token` with mode 0600. The hub logs the path of the file, never the token. A token file other users can read is refused.
+- The token is created at the first start, 256 random bits, in `<data-dir>/token` with mode 0600. The hub logs the path of the file, never the token. A token file other users can read, or its group can write, is refused.
+- In a data directory its group can read and others cannot, such as the system service's `/var/lib/homewire` (mode 0750, group `homewire`), the token and `serve.json` are created with mode 0640: the members of that group can use `homewire open`, `status` and `token`. `fabric.json` stays readable by the hub's user only.
 - **Browser**: run `homewire open`, or enter the token once on the sign-in page. The hub sets a session cookie (`HttpOnly`, `SameSite=Strict`) valid for 30 days. The hub signs the session with a key derived from the token instead of keeping it, so a session outlasts a restart of the hub. Signing out refuses that session until the hub restarts.
 - **Scripts**: send `Authorization: Bearer <token>`.
 - After 10 wrong tokens within a minute, sign-in is refused for the rest of that minute.

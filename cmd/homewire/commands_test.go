@@ -221,3 +221,21 @@ func TestNodeName(t *testing.T) {
 		t.Fatalf("status:\n%s", buf.String())
 	}
 }
+
+// In the data directory of the service (0750), serve.json is readable by
+// the group, as the token is, so that its members can use the commands.
+func TestServeInfoInAServiceDataDir(t *testing.T) {
+	dir := filepath.Join(t.TempDir(), "homewire")
+	if err := os.Mkdir(dir, 0o750); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Chmod(dir, 0o750); err != nil {
+		t.Fatal(err)
+	}
+	if err := writeServeInfo(dir, newServeInfo(&net.TCPAddr{IP: net.IPv4zero, Port: 8580}, true)); err != nil {
+		t.Fatal(err)
+	}
+	if fi, err := os.Stat(filepath.Join(dir, serveInfoFileName)); err != nil || fi.Mode().Perm() != 0o640 {
+		t.Fatalf("serve.json: %v, %v", fi.Mode(), err)
+	}
+}

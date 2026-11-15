@@ -25,6 +25,9 @@ import (
 	"log/slog"
 	"os"
 	"path/filepath"
+	"slices"
+	"strings"
+	"unicode"
 
 	"github.com/cybergarage/homewire/internal/version"
 )
@@ -37,7 +40,14 @@ const (
 	// legacyDataDirName is the data directory of the hub before it was
 	// named homewire, still used when it is the only one there.
 	legacyDataDirName = ".go-matter-hub"
+	// envPrefix starts the environment variable of each option:
+	// HOMEWIRE_LISTEN for -listen, HOMEWIRE_DATA_DIR for -data-dir.
+	envPrefix = "HOMEWIRE_"
 )
+
+// systemDataDir is the data directory of the system service, which the
+// commands other than serve use when the user has none; tests change it.
+var systemDataDir = "/var/lib/homewire"
 
 // command is a subcommand of homewire.
 type command struct {
@@ -105,8 +115,49 @@ func newFlagSet(name, summary string) *flag.FlagSet {
 	fs.Usage = func() {
 		fmt.Fprintf(fs.Output(), "Usage: %s %s [options]\n\n%s %s.\n\nOptions:\n", commandName, name, commandName, summary)
 		fs.PrintDefaults()
+		fmt.Fprintf(fs.Output(), "\nEach option can also be given in the environment, as %sLISTEN for -listen.\n", envPrefix)
 	}
 	return fs
+}
+
+// envName returns the environment variable of an option.
+func envName(option string) string {
+	return envPrefix + strings.ToUpper(strings.ReplaceAll(option, "-", "_"))
+}
+
+// parseFlags parses args, then takes each option which args does not give
+// from its environment variable, as the systemd unit of the service and a
+// container give them. The options in repeatable take a list, separated
+// by commas or spaces, in the environment.
+func parseFlags(fs *flag.FlagSet, args []string, repeatable ...string) error {
+	if err := fs.Parse(args); err != nil {
+		return err
+	}
+	given := map[string]bool{}
+	fs.Visit(func(f *flag.Flag) { given[f.Name] = true })
+	var errs []error
+	fs.VisitAll(func(f *flag.Flag) {
+		value, ok := os.LookupEnv(envName(f.Name))
+		if given[f.Name] || !ok || strings.TrimSpace(value) == "" {
+			return
+		}
+		values := []string{strings.TrimSpace(value)}
+		if slices.Contains(repeatable, f.Name) {
+			values = strings.FieldsFunc(value, func(r rune) bool { return r == ',' || unicode.IsSpace(r) })
+		}
+		for _, v := range values {
+			if err := f.Value.Set(v); err != nil {
+				errs = append(errs, fmt.Errorf("invalid %s %q: %w", envName(f.Name), v, err))
+			}
+		}
+	})
+	if err := errors.Join(errs...); err != nil {
+		return err
+	}
+	if fs.NArg() != 0 {
+		return fmt.Errorf("unexpected argument: %s", fs.Arg(0))
+	}
+	return nil
 }
 
 // dataDirFlag adds -data-dir to fs. Its default, empty, stands for the
@@ -115,14 +166,38 @@ func dataDirFlag(fs *flag.FlagSet) *string {
 	return fs.String("data-dir", "", "directory for the hub's own fabric, its commissioned nodes and the access token (default ~/"+defaultDataDirName+")")
 }
 
-// resolveDataDir returns the data directory: dir when given; otherwise
-// ~/.homewire, or ~/.go-matter-hub when only that one exists, the data
-// directory from before the hub was named homewire.
+// resolveDataDir returns the data directory of serve: dir when given;
+// otherwise ~/.homewire, or ~/.go-matter-hub when only that one exists,
+// the data directory from before the hub was named homewire.
 func resolveDataDir(dir string) (string, error) {
 	if dir != "" {
 		return dir, nil
 	}
 	home, err := os.UserHomeDir()
+	if err != nil {
+		return "", fmt.Errorf("no home directory for the data directory; give -data-dir: %w", err)
+	}
+	return defaultDataDir(home), nil
+}
+
+// resolveClientDataDir returns the data directory of the commands which use
+// a running hub: as resolveDataDir, but the data directory of the system
+// service when the user has none.
+func resolveClientDataDir(dir string) (string, error) {
+	if dir != "" {
+		return dir, nil
+	}
+	home, err := os.UserHomeDir()
+	if err == nil {
+		for _, name := range []string{defaultDataDirName, legacyDataDirName} {
+			if fi, err := os.Stat(filepath.Join(home, name)); err == nil && fi.IsDir() {
+				return defaultDataDir(home), nil
+			}
+		}
+	}
+	if fi, err := os.Stat(systemDataDir); err == nil && fi.IsDir() {
+		return systemDataDir, nil
+	}
 	if err != nil {
 		return "", fmt.Errorf("no home directory for the data directory; give -data-dir: %w", err)
 	}

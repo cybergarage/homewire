@@ -85,3 +85,66 @@ func TestDefaultDataDir(t *testing.T) {
 		t.Fatalf("resolveDataDir(/srv/hub) = %q, %v", got, err)
 	}
 }
+
+// Each option of serve can be given in the environment, as the systemd
+// unit and a container give them; the command line wins.
+func TestOptionsFromTheEnvironment(t *testing.T) {
+	t.Setenv("HOMEWIRE_LISTEN", "0.0.0.0:8580")
+	t.Setenv("HOMEWIRE_DATA_DIR", "/var/lib/homewire")
+	t.Setenv("HOMEWIRE_ALLOWED_HOST", "hub.local, hub.example\tnuc")
+	t.Setenv("HOMEWIRE_REQUIRE_AUTH", "true")
+	t.Setenv("HOMEWIRE_LOG_LEVEL", "debug")
+	o, err := parseServeOptions(nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if o.listen != "0.0.0.0:8580" || o.dataDir != "/var/lib/homewire" || !o.requireAuth || o.logLevel.String() != "DEBUG" {
+		t.Fatalf("options = %+v", o)
+	}
+	if strings.Join(o.allowedHosts, " ") != "hub.local hub.example nuc" {
+		t.Fatalf("allowed hosts = %v", o.allowedHosts)
+	}
+
+	o, err = parseServeOptions([]string{"-listen", "127.0.0.1:9000", "-allowed-host", "other"})
+	if err != nil || o.listen != "127.0.0.1:9000" || strings.Join(o.allowedHosts, " ") != "other" {
+		t.Fatalf("the command line does not win: %+v, %v", o, err)
+	}
+
+	t.Setenv("HOMEWIRE_REQUIRE_AUTH", "maybe")
+	if _, err := parseServeOptions(nil); err == nil || !strings.Contains(err.Error(), "HOMEWIRE_REQUIRE_AUTH") {
+		t.Fatalf("an invalid variable: %v", err)
+	}
+}
+
+// The commands which use a running hub find the data directory of the
+// system service when the user has none.
+func TestClientDataDir(t *testing.T) {
+	home := t.TempDir()
+	t.Setenv("HOME", home)
+	saved := systemDataDir
+	t.Cleanup(func() { systemDataDir = saved })
+	systemDataDir = filepath.Join(t.TempDir(), "homewire")
+
+	if got, _ := resolveClientDataDir(""); got != filepath.Join(home, defaultDataDirName) {
+		t.Fatalf("with no data directory: %q", got)
+	}
+	if err := os.Mkdir(systemDataDir, 0o750); err != nil {
+		t.Fatal(err)
+	}
+	if got, _ := resolveClientDataDir(""); got != systemDataDir {
+		t.Fatalf("with the service's only: %q", got)
+	}
+	if err := os.Mkdir(filepath.Join(home, defaultDataDirName), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	if got, _ := resolveClientDataDir(""); got != filepath.Join(home, defaultDataDirName) {
+		t.Fatalf("with the user's too: %q", got)
+	}
+	if got, _ := resolveClientDataDir("/srv/hub"); got != "/srv/hub" {
+		t.Fatalf("given: %q", got)
+	}
+	// serve never uses the service's.
+	if got, _ := resolveDataDir(""); got != filepath.Join(home, defaultDataDirName) {
+		t.Fatalf("serve: %q", got)
+	}
+}

@@ -23,6 +23,8 @@ import (
 	"os"
 	"path/filepath"
 	"time"
+
+	"github.com/cybergarage/homewire/internal/auth"
 )
 
 // serveInfoFileName is the file in the data directory where a running hub
@@ -82,8 +84,9 @@ func (i serveInfo) loopbackOnly() bool {
 	return ip != nil && ip.IsLoopback()
 }
 
-// writeServeInfo writes info into the data directory, readable by the
-// owner only, replacing it at once so that a reader never sees half of it.
+// writeServeInfo writes info into the data directory, readable as the
+// token is (auth.FileMode), replacing it at once so that a reader never
+// sees half of it.
 func writeServeInfo(dir string, info serveInfo) error {
 	b, err := json.MarshalIndent(info, "", "  ")
 	if err != nil {
@@ -101,7 +104,7 @@ func writeServeInfo(dir string, info serveInfo) error {
 	if err := tmp.Close(); err != nil {
 		return err
 	}
-	if err := os.Chmod(tmp.Name(), 0o600); err != nil {
+	if err := os.Chmod(tmp.Name(), auth.FileMode(dir)); err != nil {
 		return err
 	}
 	return os.Rename(tmp.Name(), filepath.Join(dir, serveInfoFileName))

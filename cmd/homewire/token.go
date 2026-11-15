@@ -27,13 +27,10 @@ import (
 func tokenCommand(args []string) error {
 	flags := newFlagSet("token", "prints the access token, for scripts which call the API")
 	dataDir := dataDirFlag(flags)
-	if err := flags.Parse(args); err != nil {
+	if err := parseFlags(flags, args); err != nil {
 		return err
 	}
-	if flags.NArg() != 0 {
-		return fmt.Errorf("unexpected argument: %s", flags.Arg(0))
-	}
-	dir, err := resolveDataDir(*dataDir)
+	dir, err := resolveClientDataDir(*dataDir)
 	if err != nil {
 		return err
 	}
