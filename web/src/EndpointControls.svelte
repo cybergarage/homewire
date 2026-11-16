@@ -27,18 +27,24 @@
 
   let busy = $state(false);
   let problem = $state('');
-  // How long a slider keeps the position it was let go at, waiting for the
-  // light to report it.
+  // How long a slider keeps the position it was let go at while the light
+  // reports no progress toward it.
   const SETTLE_MS = 3000;
 
   // A slider shows the reported state, except while a person moves it and
   // until the light reports the value it was let go at; otherwise it would
-  // jump back to the old value in between.
+  // jump back to an old value in between. Some lights take their time: a
+  // bulb was seen to step its brightness a few times a second over twenty
+  // seconds whatever transition it was asked for. So the slider waits as
+  // long as the reports come closer to its value, and shows the reported
+  // one only after SETTLE_MS without progress.
   class Slider {
     value = $state(0);
     #held = false;
     #target: number | null = null;
+    #distance = Infinity;
     #timer: ReturnType<typeof setTimeout> | undefined;
+    #reported: number | undefined;
 
     hold() {
       this.#held = true;
@@ -48,15 +54,18 @@
     release(): number {
       this.#held = false;
       this.#target = this.value;
+      this.#distance = this.#reported === undefined ? Infinity : Math.abs(this.#reported - this.value);
+      this.#wait();
+      return this.value;
+    }
+
+    #wait() {
       clearTimeout(this.#timer);
       this.#timer = setTimeout(() => {
         this.#target = null;
         this.value = this.#reported ?? this.value;
       }, SETTLE_MS);
-      return this.value;
     }
-
-    #reported: number | undefined;
 
     /** Follows a reported value. */
     report(reported: number | undefined) {
@@ -65,7 +74,13 @@
         return;
       }
       if (this.#target !== null) {
-        if (reported !== this.#target) {
+        const distance = Math.abs(reported - this.#target);
+        // Within a step of the target: the reported scale is coarser.
+        if (distance > 1) {
+          if (distance < this.#distance) {
+            this.#distance = distance;
+            this.#wait();
+          }
           return;
         }
         this.#target = null;
