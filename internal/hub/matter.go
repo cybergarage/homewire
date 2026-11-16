@@ -25,6 +25,7 @@ import (
 
 	"github.com/cybergarage/go-matter/matter"
 	"github.com/cybergarage/go-matter/matter/cluster/administratorcommissioning"
+	"github.com/cybergarage/go-matter/matter/cluster/networkcommissioning"
 	"github.com/cybergarage/go-matter/matter/cluster/operationalcredentials"
 	"github.com/cybergarage/go-matter/matter/config"
 	"github.com/cybergarage/go-matter/matter/credentials"
@@ -237,6 +238,8 @@ func (c *MatterController) Commission(ctx context.Context, payload encoding.Onbo
 			return NodeRecord{}, commissioningError(ErrWiFiRequired, err)
 		case errors.Is(err, matter.ErrNotInCommissioningMode):
 			return NodeRecord{}, commissioningError(ErrNotInCommissioningMode, err)
+		case errors.Is(err, networkcommissioning.ErrConnectNetworkFailed):
+			return NodeRecord{}, commissioningError(ErrWiFiJoinFailed, err)
 		case errors.Is(err, matter.ErrFailed):
 			return NodeRecord{}, err
 		case errors.Is(err, matter.ErrNotFound):

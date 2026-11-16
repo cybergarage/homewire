@@ -67,6 +67,7 @@ export type CommissioningState = 'running' | 'succeeded' | 'failed';
 export type CommissioningErrorCode =
   | 'not_found'
   | 'wifi_required'
+  | 'wifi_failed'
   | 'not_in_commissioning_mode'
   | 'timeout'
   | 'failed';
