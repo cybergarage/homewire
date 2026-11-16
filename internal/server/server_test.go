@@ -22,6 +22,7 @@ import (
 	"sync"
 	"testing"
 	"testing/fstest"
+	"time"
 
 	"github.com/cybergarage/homewire/internal/auth"
 	"github.com/cybergarage/homewire/internal/hub"
@@ -255,6 +256,26 @@ type fakeHub struct {
 	commissioning *hub.Commissioning
 	commissions   []commissionCall
 	commissionErr error
+	shared        []uint64
+	unshared      []uint64
+	shareErr      error
+}
+
+func (h *fakeHub) ShareNode(id uint64) (hub.Share, error) {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	h.shared = append(h.shared, id)
+	if h.shareErr != nil {
+		return hub.Share{}, h.shareErr
+	}
+	return hub.Share{ManualCode: "3497-011-2332", QRCode: "MT:Y.K9042C00KA0648G00", ExpiresAt: time.Unix(1_800_000_000, 0).UTC()}, nil
+}
+
+func (h *fakeHub) StopSharing(id uint64) error {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	h.unshared = append(h.unshared, id)
+	return h.shareErr
 }
 
 type removeCall struct {

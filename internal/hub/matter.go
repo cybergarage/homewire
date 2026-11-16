@@ -24,6 +24,7 @@ import (
 	"time"
 
 	"github.com/cybergarage/go-matter/matter"
+	"github.com/cybergarage/go-matter/matter/cluster/administratorcommissioning"
 	"github.com/cybergarage/go-matter/matter/cluster/operationalcredentials"
 	"github.com/cybergarage/go-matter/matter/config"
 	"github.com/cybergarage/go-matter/matter/credentials"
@@ -310,6 +311,33 @@ func (s *matterSession) RemoveFabric() error {
 	}
 	err = operationalcredentials.RemoveFabric(sess, rootEndpoint, index)
 	if errors.Is(err, operationalcredentials.ErrInvalidFabricIndex) {
+		return nil
+	}
+	return err
+}
+
+// OpenCommissioningWindow opens an enhanced commissioning window with a
+// fresh passcode on the node. 11.19.8.1. OpenCommissioningWindow Command.
+func (s *matterSession) OpenCommissioningWindow(vendorID, productID uint16, timeout time.Duration) (CommissioningWindow, error) {
+	window, err := administratorcommissioning.NewWindow(vendorID, productID)
+	if err != nil {
+		return CommissioningWindow{}, err
+	}
+	err = administratorcommissioning.OpenCommissioningWindow(s.node.Session(), rootEndpoint, window, timeout)
+	if errors.Is(err, administratorcommissioning.ErrBusy) {
+		return CommissioningWindow{}, fmt.Errorf("%w: %w", ErrShareBusy, err)
+	}
+	if err != nil {
+		return CommissioningWindow{}, err
+	}
+	return CommissioningWindow{ManualCode: window.ManualPairingCode.String(), QRCode: window.QRCode.String()}, nil
+}
+
+// RevokeCommissioning closes the commissioning window of the node.
+// 11.19.8.3. RevokeCommissioning Command.
+func (s *matterSession) RevokeCommissioning() error {
+	err := administratorcommissioning.RevokeCommissioning(s.node.Session(), rootEndpoint)
+	if errors.Is(err, administratorcommissioning.ErrWindowNotOpen) {
 		return nil
 	}
 	return err

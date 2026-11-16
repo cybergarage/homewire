@@ -84,6 +84,15 @@ type Session interface {
 	// ends the session. A node which no longer has the fabric is not an
 	// error. 11.18.6.12. RemoveFabric Command.
 	RemoveFabric() error
+	// OpenCommissioningWindow opens a commissioning window on the node
+	// for timeout, with a fresh passcode, for another administrator to
+	// add the node to its own fabric, and returns the window's onboarding
+	// codes. A node with a window open already answers ErrShareBusy.
+	// 11.19.8.1. OpenCommissioningWindow Command.
+	OpenCommissioningWindow(vendorID, productID uint16, timeout time.Duration) (CommissioningWindow, error)
+	// RevokeCommissioning closes the commissioning window of the node. A
+	// node with no window open is not an error. 11.19.8.3.
+	RevokeCommissioning() error
 	// Close closes the session and its subscriptions.
 	Close() error
 }

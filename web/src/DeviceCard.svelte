@@ -2,6 +2,7 @@
   import { ApiError, removeNode } from './api';
   import type { MatterNode } from './api';
   import EndpointControls from './EndpointControls.svelte';
+  import ShareDevice from './ShareDevice.svelte';
   import { clusterName, endpoints, formatValue, hex, nodeMaker, nodeName } from './nodes';
 
   interface Props {
@@ -13,6 +14,7 @@
   let { node, onremoved }: Props = $props();
 
   let open = $state(false);
+  let sharing = $state(false);
 
   // Removal: asked to confirm, then sent. When the device cannot leave the
   // fabric, the hub can still forget it, which is offered as a second step.
@@ -98,10 +100,19 @@
     <p class="node-id">Node {node.id}</p>
   {/if}
 
+  {#if sharing}
+    <ShareDevice node={node.id} {name} online={node.status === 'online'} onclose={() => (sharing = false)} />
+  {/if}
+
   {#if open || removing !== 'idle'}
     <div class="remove" aria-live="polite">
       {#if removing === 'idle'}
-        <button class="danger quiet" onclick={() => (removing = 'confirm')}>Remove device…</button>
+        <div class="actions">
+          {#if !sharing}
+            <button class="quiet" onclick={() => (sharing = true)}>Share with another app…</button>
+          {/if}
+          <button class="danger quiet" onclick={() => (removing = 'confirm')}>Remove device…</button>
+        </div>
       {:else if removing === 'confirm' || removing === 'sending'}
         <p>
           Remove <strong>{name}</strong>? It leaves the hub's fabric, and the hub stops controlling it.
