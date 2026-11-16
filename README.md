@@ -44,7 +44,7 @@ homewire open -print
 
 ## Build and run
 
-Go 1.25 or later, and Node.js 22 or later with npm. The hub depends on go-matter v0.9.6.
+Go 1.25 or later, and Node.js 22 or later with npm. The hub depends on go-matter v0.9.7.
 
 ```sh
 make build             # builds web/dist, then bin/homewire
@@ -253,14 +253,17 @@ curl -X POST -H 'Content-Type: application/json' \
 ```
 
 - `code` is the QR code text or the manual pairing code. `wifi` is for a device found over Bluetooth; leave it out for a device on the network already.
-- The progress arrives over `GET /events`: a `commissioning` event when it starts and when it ends, and a `node` event for the new node.
+- The progress arrives over `GET /events`: a `commissioning` event when it starts, at each stage it reaches, and when it ends, and a `node` event for the new node. The web UI shows the stages as a list.
 
 ```json
 {"id": 1, "state": "failed", "overBluetooth": true, "startedAt": "...", "finishedAt": "...",
- "error": "...", "errorCode": "not_in_commissioning_mode"}
+ "step": {"stage": "case", "attempt": 2, "detail": "192.168.1.80"},
+ "error": "...", "errorCode": "failed"}
 ```
 
 `state` is `running`, `succeeded` (with `node`, the new node's ID) or `failed`, with `errorCode` one of `not_found`, `wifi_required` (found over Bluetooth only, and no Wi-Fi given), `not_in_commissioning_mode`, `timeout` and `failed`.
+
+`step` is the last stage reached, the one a failed commissioning failed at. `stage` is, in order: `discovering` (over Bluetooth and on the network, round after round, for up to 30 seconds), `connecting`, `pase` (the session with the setup code), `attestation`, `credentials`, `network` (joining the Wi-Fi network; a device found over Bluetooth only), `operationalDiscovery` (finding the device on the network), `case` (the session with the hub's credentials) and `complete`. `attempt` counts the rounds of `discovering` and the attempts of `operationalDiscovery` and `case`; `detail`, for `case`, holds the addresses tried.
 
 | Status | Code | Meaning |
 | --- | --- | --- |

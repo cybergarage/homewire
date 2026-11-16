@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onDestroy } from 'svelte';
   import { ApiError, startCommissioning } from './api';
-  import type { Commissioning, CommissioningErrorCode } from './api';
+  import type { Commissioning, CommissioningErrorCode, CommissioningStage } from './api';
 
   interface Props {
     /** The latest commissioning the hub told. */
@@ -98,6 +98,69 @@
     failed: 'The device could not be added. Try again; if it fails again, reset the device.',
   };
 
+  // A device given the Wi-Fi network which then is not found on it most
+  // often could not join it: such devices were seen to fail on networks a
+  // phone or another device joins without trouble.
+  const wifiHint =
+    'The device may not have joined the Wi-Fi network. Check its name and password, and reset the device before trying again. Many devices join only a 2.4 GHz network on channels 1 to 11, with a channel width of 20 MHz and WPA2 (AES); a network which shares its name with 5 GHz, or uses WPA3, may not work.';
+
+  const hint = $derived.by(() => {
+    if (!shown || shown.state !== 'failed') {
+      return '';
+    }
+    const stage = shown.step?.stage;
+    if (shown.overBluetooth && (stage === 'network' || stage === 'operationalDiscovery')) {
+      return wifiHint;
+    }
+    return hints[shown.errorCode ?? 'failed'];
+  });
+
+  // The stages of a commissioning as they are shown, in order. The network
+  // stage is shown only for a device found over Bluetooth, which is given
+  // the Wi-Fi network.
+  const stages: { stage: CommissioningStage; label: string }[] = [
+    { stage: 'discovering', label: 'Finding the device' },
+    { stage: 'connecting', label: 'Connecting to it' },
+    { stage: 'pase', label: 'Opening a secure session with the setup code' },
+    { stage: 'attestation', label: 'Checking that it is a certified device' },
+    { stage: 'credentials', label: 'Giving it the credentials of the hub' },
+    { stage: 'network', label: 'Joining it to the Wi-Fi network' },
+    { stage: 'operationalDiscovery', label: 'Finding it on the network' },
+    { stage: 'case', label: 'Connecting to it on the network' },
+    { stage: 'complete', label: 'Finishing' },
+  ];
+
+  type StepState = 'done' | 'current' | 'failed' | 'pending';
+
+  const steps = $derived.by(() => {
+    if (!shown) {
+      return [];
+    }
+    const shownStages = stages.filter((s) => s.stage !== 'network' || shown.overBluetooth);
+    const reached = shown.step ? shownStages.findIndex((s) => s.stage === shown.step?.stage) : -1;
+    return shownStages.map((s, i) => {
+      let state: StepState = 'pending';
+      if (shown.state === 'succeeded' || i < reached) {
+        state = 'done';
+      } else if (i === reached) {
+        state = shown.state === 'failed' ? 'failed' : 'current';
+      }
+      let note = '';
+      if (i === reached && shown.step) {
+        if (shown.step.attempt > 1) {
+          note = `attempt ${shown.step.attempt}`;
+        }
+        if (s.stage === 'case' && shown.step.detail) {
+          note = note ? `${note}, at ${shown.step.detail}` : `at ${shown.step.detail}`;
+        }
+      }
+      return { ...s, state, note };
+    });
+  });
+
+  // The label of the stage a failed commissioning failed at.
+  const failedAt = $derived(steps.find((s) => s.state === 'failed')?.label ?? '');
+
   const valid = $derived(
     code.trim() !== '' && (network === 'ip' || (ssid.trim() !== '' && password.length >= 8)),
   );
@@ -138,6 +201,24 @@
   }
 </script>
 
+{#snippet stepList()}
+  {#if shown?.step}
+    <ol class="steps">
+      {#each steps as s (s.stage)}
+        <li class={s.state} aria-current={s.state === 'current' ? 'step' : undefined}>
+          <span class="mark" aria-hidden="true">
+            {s.state === 'done' ? '✓' : s.state === 'failed' ? '✕' : s.state === 'current' ? '' : '·'}
+          </span>
+          <span class="text">
+            <span class="label">{s.label}</span>
+            {#if s.note}<span class="note-inline">{s.note}</span>{/if}
+          </span>
+        </li>
+      {/each}
+    </ol>
+  {/if}
+{/snippet}
+
 <div class="head">
   <h2>Devices</h2>
   {#if !shown}
@@ -153,6 +234,7 @@
         <strong>Adding a device…</strong>
         <span class="elapsed">{elapsed}</span>
       </div>
+      {@render stepList()}
       <p class="muted">
         {shown.overBluetooth
           ? 'Looking for it over Bluetooth, then handing it the Wi-Fi network.'
@@ -165,7 +247,9 @@
       <button class="quiet" onclick={dismiss}>Done</button>
     {:else}
       <div class="row"><strong>The device was not added</strong></div>
-      <p class="hint">{hints[shown.errorCode ?? 'failed']}</p>
+      {#if failedAt}<p class="failed-at">Failed while: {failedAt}</p>{/if}
+      {@render stepList()}
+      <p class="hint">{hint}</p>
       {#if shown.error}<p class="detail">{shown.error}</p>{/if}
       <button class="quiet" onclick={() => ((startedId = null), (open = true))}>Try again</button>
     {/if}
@@ -292,6 +376,81 @@
 
   .hint {
     color: var(--text);
+  }
+
+  .failed-at {
+    margin: 0 0 0.5rem;
+    color: var(--danger);
+    font-weight: 600;
+  }
+
+  .steps {
+    list-style: none;
+    margin: 0.5rem 0 0.75rem;
+    padding: 0;
+    display: grid;
+    gap: 0.3rem;
+    font-size: 0.9rem;
+  }
+
+  .steps li {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    color: var(--muted);
+  }
+
+  .steps li.done,
+  .steps li.current {
+    color: var(--text);
+  }
+
+  .steps li.current .label {
+    font-weight: 600;
+  }
+
+  .steps li.failed {
+    color: var(--danger);
+    font-weight: 600;
+  }
+
+  .steps .mark {
+    flex: none;
+    width: 1rem;
+    text-align: center;
+  }
+
+  .steps li.current .mark::before {
+    content: '';
+    display: inline-block;
+    width: 0.6rem;
+    height: 0.6rem;
+    border-radius: 50%;
+    background: var(--accent);
+    animation: pulse 1.2s ease-in-out infinite;
+  }
+
+  .steps .text {
+    display: grid;
+  }
+
+  .note-inline {
+    color: var(--muted);
+    font-weight: 400;
+    font-size: 0.8rem;
+    overflow-wrap: anywhere;
+  }
+
+  @keyframes pulse {
+    50% {
+      opacity: 0.35;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .steps li.current .mark::before {
+      animation: none;
+    }
   }
 
   .detail {

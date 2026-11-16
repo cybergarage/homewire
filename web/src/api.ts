@@ -71,6 +71,27 @@ export type CommissioningErrorCode =
   | 'timeout'
   | 'failed';
 
+/** A stage of a commissioning, in the order they are reached. */
+export type CommissioningStage =
+  | 'discovering'
+  | 'connecting'
+  | 'pase'
+  | 'attestation'
+  | 'credentials'
+  | 'network'
+  | 'operationalDiscovery'
+  | 'case'
+  | 'complete';
+
+/** The stage a commissioning has reached. */
+export interface CommissioningStep {
+  stage: CommissioningStage;
+  /** The attempt of discovering, operationalDiscovery and case. */
+  attempt: number;
+  /** For case, the addresses tried. */
+  detail?: string;
+}
+
 /** A commissioning started from the hub. It holds no secret. */
 export interface Commissioning {
   id: number;
@@ -83,6 +104,8 @@ export interface Commissioning {
   node?: string;
   error?: string;
   errorCode?: CommissioningErrorCode;
+  /** The last stage reached; for a failed commissioning, the one it failed at. */
+  step?: CommissioningStep;
 }
 
 export interface EventHandlers {

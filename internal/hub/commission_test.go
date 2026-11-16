@@ -16,6 +16,7 @@ package hub
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 	"sync"
 	"testing"
@@ -285,5 +286,41 @@ func TestStopEndsACommissioning(t *testing.T) {
 	}
 	if job, ok := h.Commissioning(); !ok || job.State != CommissioningFailed {
 		t.Fatalf("job after Stop = %+v, %v", job, ok)
+	}
+}
+
+// Each stage the commissioning reaches is told to the listeners, and a
+// failed commissioning keeps the stage at which it failed.
+func TestCommissioningSteps(t *testing.T) {
+	ctl := newFakeController()
+	ctl.commissionSteps = []CommissioningStep{
+		{Stage: "discovering", Attempt: 1},
+		{Stage: "discovering", Attempt: 2},
+		{Stage: "connecting", Attempt: 1},
+		{Stage: "case", Attempt: 1, Detail: "192.168.1.80"},
+	}
+	h := newHub(t, ctl)
+	rec := &changeRecorder{}
+	defer h.Listen(rec.record)()
+	if err := h.Start(); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := h.StartCommissioning(exampleCode, &WiFiCredentials{SSID: "home", Password: "correct horse"}); err != nil {
+		t.Fatal(err)
+	}
+	ctl.commissionResults <- commissionResult{err: errors.New("case: i/o timeout")}
+	failed := waitCommissioning(t, h, CommissioningFailed)
+	if failed.Step == nil || failed.Step.Stage != "case" || failed.Step.Detail != "192.168.1.80" {
+		t.Fatalf("failed = %+v, step %+v; want the case stage kept", failed, failed.Step)
+	}
+
+	var stages []string
+	for _, c := range rec.commissionings() {
+		if c.State == CommissioningRunning && c.Step != nil {
+			stages = append(stages, fmt.Sprintf("%s/%d", c.Step.Stage, c.Step.Attempt))
+		}
+	}
+	if got := strings.Join(stages, " "); got != "discovering/1 discovering/2 connecting/1 case/1" {
+		t.Fatalf("steps told = %q", got)
 	}
 }
