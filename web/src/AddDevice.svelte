@@ -98,6 +98,23 @@
     failed: 'The device could not be added. Try again; if it fails again, reset the device.',
   };
 
+  // A device given the Wi-Fi network which then is not found on it most
+  // often could not join it: such devices were seen to fail on networks a
+  // phone or another device joins without trouble.
+  const wifiHint =
+    'The device may not have joined the Wi-Fi network. Check its name and password, and reset the device before trying again. Many devices join only a 2.4 GHz network on channels 1 to 11, with a channel width of 20 MHz and WPA2 (AES); a network which shares its name with 5 GHz, or uses WPA3, may not work.';
+
+  const hint = $derived.by(() => {
+    if (!shown || shown.state !== 'failed') {
+      return '';
+    }
+    const stage = shown.step?.stage;
+    if (shown.overBluetooth && (stage === 'network' || stage === 'operationalDiscovery')) {
+      return wifiHint;
+    }
+    return hints[shown.errorCode ?? 'failed'];
+  });
+
   // The stages of a commissioning as they are shown, in order. The network
   // stage is shown only for a device found over Bluetooth, which is given
   // the Wi-Fi network.
@@ -232,7 +249,7 @@
       <div class="row"><strong>The device was not added</strong></div>
       {#if failedAt}<p class="failed-at">Failed while: {failedAt}</p>{/if}
       {@render stepList()}
-      <p class="hint">{hints[shown.errorCode ?? 'failed']}</p>
+      <p class="hint">{hint}</p>
       {#if shown.error}<p class="detail">{shown.error}</p>{/if}
       <button class="quiet" onclick={() => ((startedId = null), (open = true))}>Try again</button>
     {/if}
