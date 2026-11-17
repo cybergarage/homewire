@@ -44,7 +44,7 @@ homewire open -print
 
 ## Build and run
 
-Go 1.25 or later, and Node.js 22 or later with npm. The hub depends on go-matter v0.9.7.
+Go 1.25 or later, and Node.js 22 or later with npm. The hub depends on go-matter v0.9.8.
 
 ```sh
 make build             # builds web/dist, then bin/homewire
@@ -261,7 +261,7 @@ curl -X POST -H 'Content-Type: application/json' \
  "error": "...", "errorCode": "failed"}
 ```
 
-`state` is `running`, `succeeded` (with `node`, the new node's ID) or `failed`, with `errorCode` one of `not_found`, `wifi_required` (found over Bluetooth only, and no Wi-Fi given), `not_in_commissioning_mode`, `timeout` and `failed`.
+`state` is `running`, `succeeded` (with `node`, the new node's ID) or `failed`, with `errorCode` one of `not_found`, `wifi_required` (found over Bluetooth only, and no Wi-Fi given), `wifi_failed` (the device told it could not join the Wi-Fi network; `error` names why, such as `AuthFailure` or `NetworkNotFound`), `not_in_commissioning_mode`, `timeout` and `failed`.
 
 `step` is the last stage reached, the one a failed commissioning failed at. `stage` is, in order: `discovering` (over Bluetooth and on the network, round after round, for up to 30 seconds), `connecting`, `pase` (the session with the setup code), `attestation`, `credentials`, `network` (joining the Wi-Fi network; a device found over Bluetooth only), `operationalDiscovery` (finding the device on the network), `case` (the session with the hub's credentials) and `complete`. `attempt` counts the rounds of `discovering` and the attempts of `operationalDiscovery` and `case`; `detail`, for `case`, holds the addresses tried.
 
@@ -271,6 +271,16 @@ curl -X POST -H 'Content-Type: application/json' \
 | 400 | `invalid_wifi` | The SSID is empty or longer than 32 bytes, or the password is not 8 to 63 characters or 64 hexadecimal digits |
 | 409 | `busy` | Another device is being added |
 | 503 | `not_ready` | The hub has not started |
+
+### Sharing a node with another app
+
+`POST /nodes/{id}/share` opens a commissioning window on an online node for 10 minutes, with a one-time passcode, for another app or hub (Google Home, Alexa, Apple Home, SmartThings) to add the node to its own fabric; the hub stays on the node's fabric. It answers `201`:
+
+```json
+{"manualCode": "1234-567-8901", "qrCode": "MT:...", "expiresAt": "..."}
+```
+
+The hub does not log or keep the codes. `DELETE /nodes/{id}/share` closes the window. A node with a window open already answers `409` `busy`; an offline node `409` `node_offline`; a node which refused or did not answer, `502` `share_failed`. The web UI's device card has **Share with another app…**, with the QR code and the setup code.
 
 ### Removing a node
 

@@ -39,6 +39,9 @@ var (
 	// ErrNotInCommissioningMode is returned when the device is on the
 	// network, but has no commissioning window open.
 	ErrNotInCommissioningMode = errors.New("the device is on the network but not in commissioning mode: if another app or hub has it, open a commissioning window there; otherwise, as after it was removed from this hub or a commissioning failed midway, reset it to factory defaults")
+	// ErrWiFiJoinFailed is returned when the device told that it could
+	// not join the Wi-Fi network it was given, and why.
+	ErrWiFiJoinFailed = errors.New("the device could not join the Wi-Fi network")
 )
 
 // CommissioningState is the state of a commissioning.
@@ -81,8 +84,8 @@ type Commissioning struct {
 	// NodeID is the node the device became, once commissioned.
 	NodeID uint64 `json:"-"`
 	// Error and ErrorCode say why a commissioning failed. ErrorCode is one
-	// of not_found, wifi_required, not_in_commissioning_mode, timeout and
-	// failed.
+	// of not_found, wifi_required, wifi_failed, not_in_commissioning_mode,
+	// timeout and failed.
 	Error     string `json:"error,omitempty"`
 	ErrorCode string `json:"errorCode,omitempty"`
 }
@@ -91,6 +94,8 @@ func commissioningErrorCode(err error) string {
 	switch {
 	case errors.Is(err, ErrWiFiRequired):
 		return "wifi_required"
+	case errors.Is(err, ErrWiFiJoinFailed):
+		return "wifi_failed"
 	case errors.Is(err, ErrNotInCommissioningMode):
 		return "not_in_commissioning_mode"
 	case errors.Is(err, ErrDeviceNotFound):

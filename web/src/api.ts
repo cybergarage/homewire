@@ -67,6 +67,7 @@ export type CommissioningState = 'running' | 'succeeded' | 'failed';
 export type CommissioningErrorCode =
   | 'not_found'
   | 'wifi_required'
+  | 'wifi_failed'
   | 'not_in_commissioning_mode'
   | 'timeout'
   | 'failed';
@@ -229,3 +230,23 @@ export interface Removal {
  */
 export const removeNode = (id: string, local = false) =>
   request<Removal>('DELETE', `/nodes/${id}${local ? '?local=true' : ''}`);
+
+/** A commissioning window open on a node, for another app to add it. */
+export interface Share {
+  /** The 11-digit manual pairing code, as "1234-567-8901". */
+  manualCode: string;
+  /** The QR code payload, as "MT:…". */
+  qrCode: string;
+  /** When the window closes. */
+  expiresAt: string;
+}
+
+/**
+ * Opens a commissioning window on a node, for another app or hub (Google
+ * Home, Alexa, Apple Home, …) to add it to its own fabric. The codes are
+ * answered once; the hub does not keep them.
+ */
+export const shareNode = (id: string) => request<Share>('POST', `/nodes/${id}/share`);
+
+/** Closes the commissioning window of a node. */
+export const stopSharing = (id: string) => request<void>('DELETE', `/nodes/${id}/share`);

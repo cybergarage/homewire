@@ -94,6 +94,8 @@
       'The device was found over Bluetooth only. Choose “New device” and give the Wi-Fi network it is to join.',
     not_in_commissioning_mode:
       'The device is on the network but not waiting to be set up. If another app or hub has it, open a pairing window there. Otherwise — after it was removed from this hub, or an earlier attempt failed midway — reset it to factory defaults.',
+    wifi_failed:
+      'The device could not join the Wi-Fi network. Check its name and password, and reset the device before trying again.',
     timeout: 'The device did not finish in time. Keep it close to the hub and try again.',
     failed: 'The device could not be added. Try again; if it fails again, reset the device.',
   };
@@ -104,9 +106,24 @@
   const wifiHint =
     'The device may not have joined the Wi-Fi network. Check its name and password, and reset the device before trying again. Many devices join only a 2.4 GHz network on channels 1 to 11, with a channel width of 20 MHz and WPA2 (AES); a network which shares its name with 5 GHz, or uses WPA3, may not work.';
 
+  // What the device told of its failed connection, by the status names of
+  // Network Commissioning (11.8.5.2), which the error names.
+  const wifiReasons: Record<string, string> = {
+    AuthFailure:
+      'The device could not join the Wi-Fi network: the network refused its password. Check the password, and reset the device before trying again.',
+    NetworkNotFound:
+      'The device did not find the Wi-Fi network. Check its name, and keep the device within its reach. Many devices see only a 2.4 GHz network on channels 1 to 11; a network which shares its name with 5 GHz may not be seen. Reset the device before trying again.',
+    UnsupportedSecurity:
+      'The device does not support the security of the Wi-Fi network. Set the network to WPA2 (AES) rather than WPA3, and reset the device before trying again.',
+  };
+
   const hint = $derived.by(() => {
     if (!shown || shown.state !== 'failed') {
       return '';
+    }
+    if (shown.errorCode === 'wifi_failed') {
+      const reason = Object.keys(wifiReasons).find((name) => shown.error?.includes(`(${name})`));
+      return reason ? wifiReasons[reason] : hints.wifi_failed;
     }
     const stage = shown.step?.stage;
     if (shown.overBluetooth && (stage === 'network' || stage === 'operationalDiscovery')) {

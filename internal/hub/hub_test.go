@@ -192,6 +192,24 @@ type fakeSession struct {
 	invokeErr error
 	removed   int
 	removeErr error
+	window    CommissioningWindow
+	windowErr error
+	windows   []time.Duration
+	revoked   int
+}
+
+func (s *fakeSession) OpenCommissioningWindow(_, _ uint16, timeout time.Duration) (CommissioningWindow, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.windows = append(s.windows, timeout)
+	return s.window, s.windowErr
+}
+
+func (s *fakeSession) RevokeCommissioning() error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.revoked++
+	return s.windowErr
 }
 
 // RemoveFabric ends the session, as a node which left the fabric does.

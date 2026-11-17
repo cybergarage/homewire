@@ -324,3 +324,9 @@ func TestCommissioningSteps(t *testing.T) {
 		t.Fatalf("steps told = %q", got)
 	}
 }
+
+func TestCommissioningErrorCodeWiFiFailed(t *testing.T) {
+	if got := commissioningErrorCode(commissioningError(ErrWiFiJoinFailed, errors.New("LastNetworkingStatus=7 (AuthFailure)"))); got != "wifi_failed" {
+		t.Fatalf("code = %q, want wifi_failed", got)
+	}
+}

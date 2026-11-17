@@ -166,3 +166,61 @@ func TestRemoveNodeBeforeStart(t *testing.T) {
 		t.Fatalf("RemoveNode() before Start: %v", err)
 	}
 }
+
+// Sharing a node opens a commissioning window on it, and stopping closes
+// it; an offline or unknown node is refused, a busy one told so.
+func TestShareNode(t *testing.T) {
+	h, ctl, s := startWithOnlineNode(t)
+	s.mu.Lock()
+	s.window = CommissioningWindow{ManualCode: "3497-011-2332", QRCode: "MT:Y.K9042C00KA0648G00"}
+	s.mu.Unlock()
+
+	before := time.Now()
+	share, err := h.ShareNode(7)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if share.ManualCode != "3497-011-2332" || share.QRCode == "" || share.ExpiresAt.Before(before.Add(ShareTimeout)) {
+		t.Fatalf("share = %+v", share)
+	}
+	s.mu.Lock()
+	windows := append([]time.Duration(nil), s.windows...)
+	s.mu.Unlock()
+	if len(windows) != 1 || windows[0] != ShareTimeout {
+		t.Fatalf("windows opened = %v", windows)
+	}
+	if err := h.StopSharing(7); err != nil {
+		t.Fatal(err)
+	}
+
+	s.mu.Lock()
+	s.windowErr = ErrShareBusy
+	s.mu.Unlock()
+	if _, err := h.ShareNode(7); !errors.Is(err, ErrShareBusy) {
+		t.Fatalf("busy: %v", err)
+	}
+	s.mu.Lock()
+	s.windowErr = errors.New("timeout")
+	s.mu.Unlock()
+	if _, err := h.ShareNode(7); !errors.Is(err, ErrShareFailed) {
+		t.Fatalf("failed: %v", err)
+	}
+	if err := h.StopSharing(7); !errors.Is(err, ErrShareFailed) {
+		t.Fatalf("stop failed: %v", err)
+	}
+	if _, err := h.ShareNode(0xDEAD); !errors.Is(err, ErrUnknownNode) {
+		t.Fatalf("unknown: %v", err)
+	}
+
+	// The node goes offline.
+	ctl.mu.Lock()
+	for range 10000 {
+		ctl.connectErrs[7] = append(ctl.connectErrs[7], errors.New("unreachable"))
+	}
+	ctl.mu.Unlock()
+	s.end(errors.New("session lost"))
+	waitFor(t, h, 7, "offline", func(n Node) bool { return n.Status == StatusOffline })
+	if _, err := h.ShareNode(7); !errors.Is(err, ErrNodeOffline) {
+		t.Fatalf("offline: %v", err)
+	}
+}
