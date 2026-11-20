@@ -44,7 +44,7 @@ func (s *Server) handleRemoveNode(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusServiceUnavailable, "not_ready", "the hub has not started")
 		return
 	}
-	removal, err := s.hub.RemoveNode(id, local)
+	removal, err := s.hub.RemoveNode(r.Context(), id, local)
 	switch {
 	case err == nil:
 		writeJSON(w, http.StatusOK, removal)

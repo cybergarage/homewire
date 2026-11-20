@@ -60,7 +60,7 @@ func (s *Server) handleCommand(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusNotFound, "not_found", "no such node")
 		return
 	}
-	err := s.hub.Invoke(id, hub.Command{
+	err := s.hub.Invoke(r.Context(), id, hub.Command{
 		Endpoint: uint16(*req.Endpoint),
 		Cluster:  *req.Cluster,
 		Command:  *req.Command,

@@ -15,6 +15,7 @@
 package hub
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"time"
@@ -54,7 +55,7 @@ type Share struct {
 // ShareNode opens a commissioning window on a node, for ShareTimeout, and
 // returns its codes. The node stays on the hub's fabric; another app adds
 // it to its own with the codes. 5.6.3. Enhanced Commissioning Method.
-func (h *Hub) ShareNode(nodeID uint64) (Share, error) {
+func (h *Hub) ShareNode(ctx context.Context, nodeID uint64) (Share, error) {
 	w, err := h.onlineWorker(nodeID)
 	if err != nil {
 		return Share{}, err
@@ -64,7 +65,7 @@ func (h *Hub) ShareNode(nodeID uint64) (Share, error) {
 		return Share{}, ErrNodeOffline
 	}
 	opened := time.Now()
-	window, err := sess.OpenCommissioningWindow(w.rec.VendorID, w.rec.ProductID, ShareTimeout)
+	window, err := sess.OpenCommissioningWindow(ctx, w.rec.VendorID, w.rec.ProductID, ShareTimeout)
 	if err != nil {
 		if errors.Is(err, ErrShareBusy) {
 			return Share{}, err
@@ -77,7 +78,7 @@ func (h *Hub) ShareNode(nodeID uint64) (Share, error) {
 
 // StopSharing closes the commissioning window of a node. A node with no
 // window open is not an error.
-func (h *Hub) StopSharing(nodeID uint64) error {
+func (h *Hub) StopSharing(ctx context.Context, nodeID uint64) error {
 	w, err := h.onlineWorker(nodeID)
 	if err != nil {
 		return err
@@ -86,7 +87,7 @@ func (h *Hub) StopSharing(nodeID uint64) error {
 	if sess == nil {
 		return ErrNodeOffline
 	}
-	if err := sess.RevokeCommissioning(); err != nil {
+	if err := sess.RevokeCommissioning(ctx); err != nil {
 		return fmt.Errorf("%w: %w", ErrShareFailed, err)
 	}
 	h.log.Info("commissioning window closed", "node", hexID(nodeID))

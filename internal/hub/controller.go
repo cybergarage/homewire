@@ -79,20 +79,20 @@ type Session interface {
 	SubscribeAll(ctx context.Context, handler func(Report), onError func(error)) (Subscription, error)
 	// Invoke invokes a command with its encoded CommandFields structure,
 	// and returns the status the node answered with.
-	Invoke(endpoint uint16, cluster, command uint32, fields []byte) (InvokeStatus, error)
+	Invoke(ctx context.Context, endpoint uint16, cluster, command uint32, fields []byte) (InvokeStatus, error)
 	// RemoveFabric removes the hub's fabric from the node, which then
 	// ends the session. A node which no longer has the fabric is not an
 	// error. 11.18.6.12. RemoveFabric Command.
-	RemoveFabric() error
+	RemoveFabric(ctx context.Context) error
 	// OpenCommissioningWindow opens a commissioning window on the node
 	// for timeout, with a fresh passcode, for another administrator to
 	// add the node to its own fabric, and returns the window's onboarding
 	// codes. A node with a window open already answers ErrShareBusy.
 	// 11.19.8.1. OpenCommissioningWindow Command.
-	OpenCommissioningWindow(vendorID, productID uint16, timeout time.Duration) (CommissioningWindow, error)
+	OpenCommissioningWindow(ctx context.Context, vendorID, productID uint16, timeout time.Duration) (CommissioningWindow, error)
 	// RevokeCommissioning closes the commissioning window of the node. A
 	// node with no window open is not an error. 11.19.8.3.
-	RevokeCommissioning() error
+	RevokeCommissioning(ctx context.Context) error
 	// Close closes the session and its subscriptions.
 	Close() error
 }

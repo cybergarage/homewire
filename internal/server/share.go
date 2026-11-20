@@ -34,7 +34,7 @@ func (s *Server) handleShareNode(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusServiceUnavailable, "not_ready", "the hub has not started")
 		return
 	}
-	share, err := s.hub.ShareNode(id)
+	share, err := s.hub.ShareNode(r.Context(), id)
 	if err != nil {
 		writeShareError(w, err)
 		return
@@ -53,7 +53,7 @@ func (s *Server) handleStopSharing(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusServiceUnavailable, "not_ready", "the hub has not started")
 		return
 	}
-	if err := s.hub.StopSharing(id); err != nil {
+	if err := s.hub.StopSharing(r.Context(), id); err != nil {
 		writeShareError(w, err)
 		return
 	}

@@ -15,6 +15,7 @@
 package hub
 
 import (
+	"context"
 	"errors"
 	"fmt"
 )
@@ -43,7 +44,7 @@ type Removal struct {
 // removed, with ErrNodeOffline or ErrRemoveFailed, unless local is true:
 // the hub then forgets the node without the device, which keeps the
 // fabric until it is reset to factory defaults.
-func (h *Hub) RemoveNode(nodeID uint64, local bool) (Removal, error) {
+func (h *Hub) RemoveNode(ctx context.Context, nodeID uint64, local bool) (Removal, error) {
 	h.mu.Lock()
 	if !h.started {
 		h.mu.Unlock()
@@ -61,7 +62,7 @@ func (h *Hub) RemoveNode(nodeID uint64, local bool) (Removal, error) {
 	w.removing = true
 	h.mu.Unlock()
 
-	removal, err := h.removeFromDevice(w, local)
+	removal, err := h.removeFromDevice(ctx, w, local)
 	if err != nil {
 		h.mu.Lock()
 		w.removing = false
@@ -90,7 +91,7 @@ func (h *Hub) RemoveNode(nodeID uint64, local bool) (Removal, error) {
 
 // removeFromDevice removes the fabric from the device of w, or, when that
 // is not possible and local is true, gives up on it.
-func (h *Hub) removeFromDevice(w *nodeWorker, local bool) (Removal, error) {
+func (h *Hub) removeFromDevice(ctx context.Context, w *nodeWorker, local bool) (Removal, error) {
 	sess := w.currentSession()
 	if sess == nil {
 		if !local {
@@ -98,7 +99,7 @@ func (h *Hub) removeFromDevice(w *nodeWorker, local bool) (Removal, error) {
 		}
 		return Removal{FromDevice: false}, nil
 	}
-	if err := sess.RemoveFabric(); err != nil {
+	if err := sess.RemoveFabric(ctx); err != nil {
 		if !local {
 			return Removal{}, fmt.Errorf("%w: %w", ErrRemoveFailed, err)
 		}
