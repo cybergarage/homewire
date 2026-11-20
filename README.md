@@ -4,9 +4,11 @@ homewire is a Matter hub built on [go-matter](https://github.com/cybergarage/go-
 
 One executable, `homewire`, holds the daemon and the web UI. It was named go-matter-hub before. It is meant to run on a host on the home network, and to be used from a browser on another machine.
 
+<img src="docs/images/devices.png" alt="The devices of the hub, with their controls" width="380">
+
 ## Status
 
-The hub keeps a fabric of its own, connects to the nodes commissioned into it, follows their state by subscription, shows the devices and their state, live, in the web UI and over the API, and controls them: on/off, brightness, white color temperature and color, and adds new devices with their setup code (phase B5).
+The hub keeps a fabric of its own, connects to the nodes commissioned into it, follows their state by subscription, shows the devices and their state, live, in the web UI and over the API, and controls them: on/off, brightness, white color temperature and color. It adds devices with their setup code, and shares them with other apps and hubs, such as Google Home or Amazon Alexa, which then control them alongside the hub.
 
 | Phase | Scope | Status |
 | --- | --- | --- |
@@ -16,8 +18,9 @@ The hub keeps a fabric of its own, connects to the nodes commissioned into it, f
 | B4 | Control API and UI: on/off, level, color | Done |
 | B5 | Commissioning from the UI | Done |
 | B6 | systemd service, configuration file, .deb packages | Done; a key store is deferred |
+| B7 | Sharing with other apps and hubs (multi-admin); adding a device another app shares | Done |
 
-Automation and remote access are out of scope for now.
+Automation, remote access, Thread devices and a snap package are out of scope for v1.0.
 
 ## Install
 
@@ -96,6 +99,8 @@ level=INFO msg="attribute changed" node=0000000016A5E84A endpoint=1 cluster=0x00
 
 **Add device** in the web UI takes the device's setup code: the text of its QR code (`MT:...`) or the 11- or 21-digit manual pairing code printed beside it.
 
+<img src="docs/images/add-device.png" alt="Add device: the setup code, and the Wi-Fi network for a new device" width="380">
+
 - **A new device**, not on any network yet, is found over Bluetooth and given the Wi-Fi network it is to join. The host of the hub needs a Bluetooth adapter (BlueZ on Linux), and most devices join a 2.4 GHz network only. The browser remembers the network name; the password is handed to the device and not stored.
 - **A device already on the network**, Wi-Fi or Ethernet, is found by mDNS. It has to be waiting to be set up: new from the factory or reset, or with a pairing window opened from another app or hub it is set up with.
 
@@ -109,7 +114,21 @@ Neither the setup code nor the Wi-Fi password is logged or reported back by the 
 
 A device which is offline, or which does not leave the fabric, is not removed. The hub can then forget it anyway (**Remove from the hub only**): the device keeps the hub's fabric until it is reset to factory defaults, which it needs before it can be added again.
 
-To add a removed device again, reset it to factory defaults. A device may start waiting to be set up again by itself once it has no fabric left, but many do not: they stay on the network, not waiting to be set up.
+To add a removed device again, open a pairing window for it in another app or hub which still has it, and add it with that code over the network; a reset is not needed then. Otherwise reset it to factory defaults: a device may start waiting to be set up again by itself once it has no fabric left, but many do not: they stay on the network, not waiting to be set up.
+
+## Sharing a device with another app
+
+A device of the hub can be added to another app or hub as well, such as Google Home, Amazon Alexa, Apple Home or SmartThings, and is then controlled from both; the hub stays in control (Matter multi-admin).
+
+1. **Share with another app…** on the device's card opens a pairing window on the device for 10 minutes, and shows a QR code and an 11-digit setup code for it.
+2. In the other app, add a Matter device, and scan the QR code or type the setup code. The code works once, while the window is open.
+3. The device then belongs to both. **Close the window** ends sharing early.
+
+<img src="docs/images/share.png" alt="Sharing a device: the QR code and the setup code of its pairing window" width="380">
+
+The other way round works too: in the other app, open a pairing window for a device it has (in Google Home, *Linked Matter apps & services*), and add it to the hub with **Add device** and that code. The device is found on the network.
+
+The hub does not log or keep the codes: they are made for one window, and shown once.
 
 ## Access control
 
