@@ -352,6 +352,7 @@ GOWORK=off go build ./... && GOWORK=off go test ./...
 | `internal/server` | HTTP API, event stream, Host and Origin checks, web UI serving |
 | `packaging` | systemd unit, `/etc/default/homewire`, the package's install scripts, and the test of the installed package run by CI |
 | `web` | Svelte + Vite + TypeScript UI; `web/dist` is embedded |
+| `docs/images` | The screenshots of the README |
 
 ## License
 
