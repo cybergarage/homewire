@@ -198,14 +198,14 @@ type fakeSession struct {
 	revoked   int
 }
 
-func (s *fakeSession) OpenCommissioningWindow(_, _ uint16, timeout time.Duration) (CommissioningWindow, error) {
+func (s *fakeSession) OpenCommissioningWindow(_ context.Context, _, _ uint16, timeout time.Duration) (CommissioningWindow, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.windows = append(s.windows, timeout)
 	return s.window, s.windowErr
 }
 
-func (s *fakeSession) RevokeCommissioning() error {
+func (s *fakeSession) RevokeCommissioning(context.Context) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.revoked++
@@ -213,7 +213,7 @@ func (s *fakeSession) RevokeCommissioning() error {
 }
 
 // RemoveFabric ends the session, as a node which left the fabric does.
-func (s *fakeSession) RemoveFabric() error {
+func (s *fakeSession) RemoveFabric(context.Context) error {
 	s.mu.Lock()
 	s.removed++
 	err := s.removeErr
@@ -230,7 +230,7 @@ type invokeCall struct {
 	fields           []byte
 }
 
-func (s *fakeSession) Invoke(endpoint uint16, cluster, command uint32, fields []byte) (InvokeStatus, error) {
+func (s *fakeSession) Invoke(_ context.Context, endpoint uint16, cluster, command uint32, fields []byte) (InvokeStatus, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.invokes = append(s.invokes, invokeCall{endpoint, cluster, command, fields})

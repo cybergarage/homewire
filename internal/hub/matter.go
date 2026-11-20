@@ -224,10 +224,10 @@ func (c *MatterController) Commission(ctx context.Context, payload encoding.Onbo
 		}))
 	}
 	if wifi != nil {
-		opts = append(opts, config.NewWiFiNetworkConfig(
+		opts = append(opts, matter.WithCommissionWiFiNetwork(config.NewWiFiNetworkConfig(
 			config.WithSSID([]byte(wifi.SSID)),
 			config.WithCredentials([]byte(wifi.Password)),
-		))
+		)))
 	}
 	cme, err := c.cmr.Commission(ctx, payload, opts...)
 	if err != nil {
@@ -268,7 +268,7 @@ func (c *MatterController) Connect(ctx context.Context, nodeID uint64) (Session,
 	if c.cmr == nil {
 		return nil, ErrNotStarted
 	}
-	node, err := c.cmr.Connect(ctx, nodeID)
+	node, err := c.cmr.Connect(ctx, matter.NodeID(nodeID))
 	if err != nil {
 		return nil, err
 	}
@@ -295,8 +295,8 @@ type matterSession struct {
 func (s *matterSession) Close() error { return s.node.Close() }
 
 // Invoke invokes a command. 8.8. Invoke Interaction.
-func (s *matterSession) Invoke(endpoint uint16, cluster, command uint32, fields []byte) (InvokeStatus, error) {
-	res, err := s.node.Invoke(im.EndpointID(endpoint), im.ClusterID(cluster), im.CommandID(command), fields)
+func (s *matterSession) Invoke(ctx context.Context, endpoint uint16, cluster, command uint32, fields []byte) (InvokeStatus, error) {
+	res, err := s.node.Invoke(ctx, im.EndpointID(endpoint), im.ClusterID(cluster), im.CommandID(command), fields)
 	if err != nil {
 		return InvokeStatus{}, err
 	}
@@ -306,8 +306,8 @@ func (s *matterSession) Invoke(endpoint uint16, cluster, command uint32, fields 
 // RemoveFabric reads the index of the session's fabric on the node and
 // removes that fabric. 11.18.6.7. CurrentFabricIndex Attribute, 11.18.6.12.
 // RemoveFabric Command.
-func (s *matterSession) RemoveFabric() error {
-	sess := s.node.Session()
+func (s *matterSession) RemoveFabric(ctx context.Context) error {
+	sess := im.WithContext(ctx, s.node.Session())
 	index, err := operationalcredentials.CurrentFabricIndex(sess, rootEndpoint)
 	if err != nil {
 		return err
@@ -321,12 +321,12 @@ func (s *matterSession) RemoveFabric() error {
 
 // OpenCommissioningWindow opens an enhanced commissioning window with a
 // fresh passcode on the node. 11.19.8.1. OpenCommissioningWindow Command.
-func (s *matterSession) OpenCommissioningWindow(vendorID, productID uint16, timeout time.Duration) (CommissioningWindow, error) {
+func (s *matterSession) OpenCommissioningWindow(ctx context.Context, vendorID, productID uint16, timeout time.Duration) (CommissioningWindow, error) {
 	window, err := administratorcommissioning.NewWindow(vendorID, productID)
 	if err != nil {
 		return CommissioningWindow{}, err
 	}
-	err = administratorcommissioning.OpenCommissioningWindow(s.node.Session(), rootEndpoint, window, timeout)
+	err = administratorcommissioning.OpenCommissioningWindow(im.WithContext(ctx, s.node.Session()), rootEndpoint, window, timeout)
 	if errors.Is(err, administratorcommissioning.ErrBusy) {
 		return CommissioningWindow{}, fmt.Errorf("%w: %w", ErrShareBusy, err)
 	}
@@ -338,8 +338,8 @@ func (s *matterSession) OpenCommissioningWindow(vendorID, productID uint16, time
 
 // RevokeCommissioning closes the commissioning window of the node.
 // 11.19.8.3. RevokeCommissioning Command.
-func (s *matterSession) RevokeCommissioning() error {
-	err := administratorcommissioning.RevokeCommissioning(s.node.Session(), rootEndpoint)
+func (s *matterSession) RevokeCommissioning(ctx context.Context) error {
+	err := administratorcommissioning.RevokeCommissioning(im.WithContext(ctx, s.node.Session()), rootEndpoint)
 	if errors.Is(err, administratorcommissioning.ErrWindowNotOpen) {
 		return nil
 	}

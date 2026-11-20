@@ -15,6 +15,7 @@
 package hub
 
 import (
+	"context"
 	"encoding/hex"
 	"errors"
 	"testing"
@@ -43,13 +44,13 @@ func onlineHub(t *testing.T) (*Hub, *fakeSession) {
 
 func TestInvokeEncodesTheFieldsFromTheCatalog(t *testing.T) {
 	h, s := onlineHub(t)
-	err := h.Invoke(7, Command{Endpoint: 1, Cluster: levelClusterID, Command: 0x04, Fields: map[string]any{
+	err := h.Invoke(context.Background(), 7, Command{Endpoint: 1, Cluster: levelClusterID, Command: 0x04, Fields: map[string]any{
 		"Level": 127, "TransitionTime": 5, "OptionsMask": 0, "OptionsOverride": 0,
 	}})
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := h.Invoke(7, Command{Endpoint: 1, Cluster: onOffClusterID, Command: 0x01}); err != nil {
+	if err := h.Invoke(context.Background(), 7, Command{Endpoint: 1, Cluster: onOffClusterID, Command: 0x01}); err != nil {
 		t.Fatal(err)
 	}
 	s.mu.Lock()
@@ -83,7 +84,7 @@ func TestInvokeErrors(t *testing.T) {
 		{"timed command", 7, Command{Endpoint: 1, Cluster: doorLockClusterID, Command: 0x00}, ErrTimedCommand},
 	}
 	for _, tt := range tests {
-		if err := h.Invoke(tt.node, tt.cmd); !errors.Is(err, tt.want) {
+		if err := h.Invoke(context.Background(), tt.node, tt.cmd); !errors.Is(err, tt.want) {
 			t.Errorf("%s: %v", tt.name, err)
 		}
 	}
@@ -98,7 +99,7 @@ func TestInvokeErrors(t *testing.T) {
 	s.mu.Lock()
 	s.answer = InvokeStatus{IMStatus: 0x81}
 	s.mu.Unlock()
-	err := h.Invoke(7, Command{Endpoint: 1, Cluster: onOffClusterID, Command: 0x01})
+	err := h.Invoke(context.Background(), 7, Command{Endpoint: 1, Cluster: onOffClusterID, Command: 0x01})
 	var refused *CommandError
 	if !errors.Is(err, ErrCommandFailed) || !errors.As(err, &refused) || refused.Status.IMStatus != 0x81 {
 		t.Fatalf("refused command: %v", err)
@@ -111,7 +112,7 @@ func TestInvokeErrors(t *testing.T) {
 	s.mu.Lock()
 	s.answer, s.invokeErr = InvokeStatus{}, errors.New("response timeout")
 	s.mu.Unlock()
-	if err := h.Invoke(7, Command{Endpoint: 1, Cluster: onOffClusterID, Command: 0x01}); err == nil || err.Error() != "response timeout" {
+	if err := h.Invoke(context.Background(), 7, Command{Endpoint: 1, Cluster: onOffClusterID, Command: 0x01}); err == nil || err.Error() != "response timeout" {
 		t.Fatalf("session error: %v", err)
 	}
 }
@@ -123,7 +124,7 @@ func TestInvokeNeedsASession(t *testing.T) {
 	if err := h.Start(); err != nil {
 		t.Fatal(err)
 	}
-	if err := h.Invoke(7, Command{Endpoint: 1, Cluster: onOffClusterID, Command: 0x01}); !errors.Is(err, ErrNodeOffline) {
+	if err := h.Invoke(context.Background(), 7, Command{Endpoint: 1, Cluster: onOffClusterID, Command: 0x01}); !errors.Is(err, ErrNodeOffline) {
 		t.Fatalf("Invoke() while connecting = %v", err)
 	}
 
@@ -139,7 +140,7 @@ func TestInvokeNeedsASession(t *testing.T) {
 	ctl.mu.Unlock()
 	s.end(errors.New("session closed"))
 	waitFor(t, h, 7, "offline", func(n Node) bool { return n.Status == StatusOffline })
-	if err := h.Invoke(7, Command{Endpoint: 1, Cluster: onOffClusterID, Command: 0x01}); !errors.Is(err, ErrNodeOffline) {
+	if err := h.Invoke(context.Background(), 7, Command{Endpoint: 1, Cluster: onOffClusterID, Command: 0x01}); !errors.Is(err, ErrNodeOffline) {
 		t.Fatalf("Invoke() after the subscription ended = %v", err)
 	}
 }

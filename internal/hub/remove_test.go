@@ -15,6 +15,7 @@
 package hub
 
 import (
+	"context"
 	"errors"
 	"io"
 	"log/slog"
@@ -60,7 +61,7 @@ func TestRemoveNode(t *testing.T) {
 	changes, stop := listen(h)
 	defer stop()
 
-	removal, err := h.RemoveNode(7, false)
+	removal, err := h.RemoveNode(context.Background(), 7, false)
 	if err != nil || !removal.FromDevice {
 		t.Fatalf("RemoveNode() = %+v, %v", removal, err)
 	}
@@ -85,7 +86,7 @@ func TestRemoveNode(t *testing.T) {
 	}
 
 	// The node is gone, and not connected to again.
-	if _, err := h.RemoveNode(7, false); !errors.Is(err, ErrUnknownNode) {
+	if _, err := h.RemoveNode(context.Background(), 7, false); !errors.Is(err, ErrUnknownNode) {
 		t.Errorf("RemoveNode() again: %v", err)
 	}
 	time.Sleep(50 * time.Millisecond)
@@ -100,7 +101,7 @@ func TestRemoveNodeThatRefuses(t *testing.T) {
 	s.removeErr = errors.New("NOCResponse status=2")
 	s.mu.Unlock()
 
-	if _, err := h.RemoveNode(7, false); !errors.Is(err, ErrRemoveFailed) {
+	if _, err := h.RemoveNode(context.Background(), 7, false); !errors.Is(err, ErrRemoveFailed) {
 		t.Fatalf("RemoveNode() error = %v, want ErrRemoveFailed", err)
 	}
 	if n, ok := h.Node(7); !ok || n.Status != StatusOnline {
@@ -108,7 +109,7 @@ func TestRemoveNodeThatRefuses(t *testing.T) {
 	}
 
 	// Removed from the hub only, when asked.
-	removal, err := h.RemoveNode(7, true)
+	removal, err := h.RemoveNode(context.Background(), 7, true)
 	if err != nil || removal.FromDevice {
 		t.Fatalf("RemoveNode(local) = %+v, %v", removal, err)
 	}
@@ -135,10 +136,10 @@ func TestRemoveOfflineNode(t *testing.T) {
 	}
 	waitFor(t, h, 7, "offline", func(n Node) bool { return n.Status == StatusOffline })
 
-	if _, err := h.RemoveNode(7, false); !errors.Is(err, ErrNodeOffline) {
+	if _, err := h.RemoveNode(context.Background(), 7, false); !errors.Is(err, ErrNodeOffline) {
 		t.Fatalf("RemoveNode() error = %v, want ErrNodeOffline", err)
 	}
-	removal, err := h.RemoveNode(7, true)
+	removal, err := h.RemoveNode(context.Background(), 7, true)
 	if err != nil || removal.FromDevice {
 		t.Fatalf("RemoveNode(local) = %+v, %v", removal, err)
 	}
@@ -149,20 +150,20 @@ func TestRemoveOfflineNode(t *testing.T) {
 
 func TestRemoveNodeKeepsTheOthers(t *testing.T) {
 	h, _, _ := startWithOnlineNode(t, NodeRecord{NodeID: 8})
-	if _, err := h.RemoveNode(7, false); err != nil {
+	if _, err := h.RemoveNode(context.Background(), 7, false); err != nil {
 		t.Fatal(err)
 	}
 	if _, ok := h.Node(8); !ok {
 		t.Fatal("node 8 was removed too")
 	}
-	if _, err := h.RemoveNode(9, false); !errors.Is(err, ErrUnknownNode) {
+	if _, err := h.RemoveNode(context.Background(), 9, false); !errors.Is(err, ErrUnknownNode) {
 		t.Fatalf("RemoveNode(9) error = %v", err)
 	}
 }
 
 func TestRemoveNodeBeforeStart(t *testing.T) {
 	h := newHub(t, newFakeController(NodeRecord{NodeID: 7}))
-	if _, err := h.RemoveNode(7, false); !errors.Is(err, ErrNotStarted) {
+	if _, err := h.RemoveNode(context.Background(), 7, false); !errors.Is(err, ErrNotStarted) {
 		t.Fatalf("RemoveNode() before Start: %v", err)
 	}
 }
@@ -176,7 +177,7 @@ func TestShareNode(t *testing.T) {
 	s.mu.Unlock()
 
 	before := time.Now()
-	share, err := h.ShareNode(7)
+	share, err := h.ShareNode(context.Background(), 7)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -189,26 +190,26 @@ func TestShareNode(t *testing.T) {
 	if len(windows) != 1 || windows[0] != ShareTimeout {
 		t.Fatalf("windows opened = %v", windows)
 	}
-	if err := h.StopSharing(7); err != nil {
+	if err := h.StopSharing(context.Background(), 7); err != nil {
 		t.Fatal(err)
 	}
 
 	s.mu.Lock()
 	s.windowErr = ErrShareBusy
 	s.mu.Unlock()
-	if _, err := h.ShareNode(7); !errors.Is(err, ErrShareBusy) {
+	if _, err := h.ShareNode(context.Background(), 7); !errors.Is(err, ErrShareBusy) {
 		t.Fatalf("busy: %v", err)
 	}
 	s.mu.Lock()
 	s.windowErr = errors.New("timeout")
 	s.mu.Unlock()
-	if _, err := h.ShareNode(7); !errors.Is(err, ErrShareFailed) {
+	if _, err := h.ShareNode(context.Background(), 7); !errors.Is(err, ErrShareFailed) {
 		t.Fatalf("failed: %v", err)
 	}
-	if err := h.StopSharing(7); !errors.Is(err, ErrShareFailed) {
+	if err := h.StopSharing(context.Background(), 7); !errors.Is(err, ErrShareFailed) {
 		t.Fatalf("stop failed: %v", err)
 	}
-	if _, err := h.ShareNode(0xDEAD); !errors.Is(err, ErrUnknownNode) {
+	if _, err := h.ShareNode(context.Background(), 0xDEAD); !errors.Is(err, ErrUnknownNode) {
 		t.Fatalf("unknown: %v", err)
 	}
 
@@ -220,7 +221,7 @@ func TestShareNode(t *testing.T) {
 	ctl.mu.Unlock()
 	s.end(errors.New("session lost"))
 	waitFor(t, h, 7, "offline", func(n Node) bool { return n.Status == StatusOffline })
-	if _, err := h.ShareNode(7); !errors.Is(err, ErrNodeOffline) {
+	if _, err := h.ShareNode(context.Background(), 7); !errors.Is(err, ErrNodeOffline) {
 		t.Fatalf("offline: %v", err)
 	}
 }

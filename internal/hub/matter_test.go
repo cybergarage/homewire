@@ -181,7 +181,7 @@ func TestHubCommissionsAGoMatterLight(t *testing.T) {
 		}
 		time.Sleep(50 * time.Millisecond)
 	}
-	if err := h.Invoke(done.NodeID, Command{Endpoint: lightEndpoint, Cluster: onOffCluster, Command: 0x01}); err != nil {
+	if err := h.Invoke(context.Background(), done.NodeID, Command{Endpoint: lightEndpoint, Cluster: onOffCluster, Command: 0x01}); err != nil {
 		t.Fatalf("On: %v", err)
 	}
 	if !light.On() {
@@ -204,7 +204,7 @@ func TestHubCommissionsAGoMatterLight(t *testing.T) {
 	if n := fabrics(); n != 1 {
 		t.Fatalf("the light has %d fabrics before the removal, want 1", n)
 	}
-	removal, err := h.RemoveNode(done.NodeID, false)
+	removal, err := h.RemoveNode(context.Background(), done.NodeID, false)
 	if err != nil || !removal.FromDevice {
 		t.Fatalf("RemoveNode() = %+v, %v", removal, err)
 	}
@@ -337,20 +337,20 @@ func TestHubFollowsAGoMatterLight(t *testing.T) {
 
 	// The hub controls the light over the same session, and sees the new
 	// state through its subscription.
-	if err := h.Invoke(uint64(nodeID), Command{Endpoint: lightEndpoint, Cluster: onOffCluster, Command: 0x01}); err != nil {
+	if err := h.Invoke(context.Background(), uint64(nodeID), Command{Endpoint: lightEndpoint, Cluster: onOffCluster, Command: 0x01}); err != nil {
 		t.Fatalf("On: %v", err)
 	}
 	wait("OnOff true after On", func(n Node) bool { v, _ := onOffValue(n); return v == true })
 	if !light.On() {
 		t.Fatal("the light is off after On")
 	}
-	if err := h.Invoke(uint64(nodeID), Command{Endpoint: lightEndpoint, Cluster: onOffCluster, Command: 0x02}); err != nil {
+	if err := h.Invoke(context.Background(), uint64(nodeID), Command{Endpoint: lightEndpoint, Cluster: onOffCluster, Command: 0x02}); err != nil {
 		t.Fatalf("Toggle: %v", err)
 	}
 	wait("OnOff false after Toggle", func(n Node) bool { v, _ := onOffValue(n); return v == false })
 
 	// The light has no Level Control cluster: the node refuses the command.
-	err = h.Invoke(uint64(nodeID), Command{Endpoint: lightEndpoint, Cluster: levelControlCluster, Command: 0x04, Fields: map[string]any{
+	err = h.Invoke(context.Background(), uint64(nodeID), Command{Endpoint: lightEndpoint, Cluster: levelControlCluster, Command: 0x04, Fields: map[string]any{
 		"Level": 127, "TransitionTime": 0, "OptionsMask": 0, "OptionsOverride": 0,
 	}})
 	if !errors.Is(err, ErrCommandFailed) {

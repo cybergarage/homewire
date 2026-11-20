@@ -85,7 +85,9 @@ checksum:
   name_template: checksums.txt
 
 snapshot:
-  version_template: "{{ incpatch .Version }}~dev.{{ .ShortCommit }}"
+  # A pre-release of semver: nfpm writes it in the .deb as 0.9.1~dev.<commit>,
+  # which sorts before 0.9.1. GoReleaser refuses "~" in the version itself.
+  version_template: "{{ incpatch .Version }}-dev.{{ .ShortCommit }}"
 
 changelog:
   use: github-native

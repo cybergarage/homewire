@@ -63,14 +63,14 @@ type HubState interface {
 	// state, and returns a function which removes it.
 	Listen(fn func(hub.Change)) (remove func())
 	// Invoke invokes a command on a node.
-	Invoke(nodeID uint64, c hub.Command) error
+	Invoke(ctx context.Context, nodeID uint64, c hub.Command) error
 	// RemoveNode removes a node from the fabric and from the hub; local
 	// forgets a node which cannot leave the fabric.
-	RemoveNode(nodeID uint64, local bool) (hub.Removal, error)
+	RemoveNode(ctx context.Context, nodeID uint64, local bool) (hub.Removal, error)
 	// ShareNode opens a commissioning window on a node for another app
 	// to add it, and returns its codes; StopSharing closes it.
-	ShareNode(nodeID uint64) (hub.Share, error)
-	StopSharing(nodeID uint64) error
+	ShareNode(ctx context.Context, nodeID uint64) (hub.Share, error)
+	StopSharing(ctx context.Context, nodeID uint64) error
 	// StartCommissioning starts commissioning a device with a setup code;
 	// wifi is nil for a device which is on the network already.
 	StartCommissioning(code string, wifi *hub.WiFiCredentials) (hub.Commissioning, error)

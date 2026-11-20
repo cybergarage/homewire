@@ -15,6 +15,7 @@
 package server
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -261,7 +262,7 @@ type fakeHub struct {
 	shareErr      error
 }
 
-func (h *fakeHub) ShareNode(id uint64) (hub.Share, error) {
+func (h *fakeHub) ShareNode(_ context.Context, id uint64) (hub.Share, error) {
 	h.mu.Lock()
 	defer h.mu.Unlock()
 	h.shared = append(h.shared, id)
@@ -271,7 +272,7 @@ func (h *fakeHub) ShareNode(id uint64) (hub.Share, error) {
 	return hub.Share{ManualCode: "3497-011-2332", QRCode: "MT:Y.K9042C00KA0648G00", ExpiresAt: time.Unix(1_800_000_000, 0).UTC()}, nil
 }
 
-func (h *fakeHub) StopSharing(id uint64) error {
+func (h *fakeHub) StopSharing(_ context.Context, id uint64) error {
 	h.mu.Lock()
 	defer h.mu.Unlock()
 	h.unshared = append(h.unshared, id)
@@ -283,7 +284,7 @@ type removeCall struct {
 	local bool
 }
 
-func (h *fakeHub) RemoveNode(id uint64, local bool) (hub.Removal, error) {
+func (h *fakeHub) RemoveNode(_ context.Context, id uint64, local bool) (hub.Removal, error) {
 	h.mu.Lock()
 	defer h.mu.Unlock()
 	h.removed = append(h.removed, removeCall{id, local})
@@ -327,7 +328,7 @@ type invoked struct {
 	cmd  hub.Command
 }
 
-func (h *fakeHub) Invoke(nodeID uint64, c hub.Command) error {
+func (h *fakeHub) Invoke(_ context.Context, nodeID uint64, c hub.Command) error {
 	h.mu.Lock()
 	defer h.mu.Unlock()
 	h.invoked = append(h.invoked, invoked{nodeID, c})

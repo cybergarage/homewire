@@ -15,6 +15,7 @@
 package hub
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"sync"
@@ -117,7 +118,7 @@ func EncodeCommand(c Command) ([]byte, error) {
 // Invoke invokes a command on a node over the session the hub keeps with
 // it. The new state reaches the hub through the subscription, as any
 // other change does.
-func (h *Hub) Invoke(nodeID uint64, c Command) error {
+func (h *Hub) Invoke(ctx context.Context, nodeID uint64, c Command) error {
 	fields, err := EncodeCommand(c)
 	if err != nil {
 		return err
@@ -132,7 +133,7 @@ func (h *Hub) Invoke(nodeID uint64, c Command) error {
 	if sess == nil {
 		return ErrNodeOffline
 	}
-	status, err := sess.Invoke(c.Endpoint, c.Cluster, c.Command, fields)
+	status, err := sess.Invoke(ctx, c.Endpoint, c.Cluster, c.Command, fields)
 	if err != nil {
 		return err
 	}
