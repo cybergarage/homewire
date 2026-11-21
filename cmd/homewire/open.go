@@ -30,10 +30,22 @@ func openCommand(args []string) error {
 	dataDir := dataDirFlag(fs)
 	printOnly := fs.Bool("print", false, "print the link instead of opening a browser, for a browser on another machine")
 	host := fs.String("host", "", "host name or address of the hub in the link (default: this host's loopback address; with -print, its .local name)")
+	notify := fs.Bool("notify", false, "tell a failure with a desktop notification too, for the launcher of the app grid, which has no terminal")
 	if err := parseFlags(fs, args); err != nil {
 		return err
 	}
-	dir, err := resolveClientDataDir(*dataDir)
+	err := openHub(*dataDir, *printOnly, *host, *notify)
+	if err != nil && *notify {
+		notifyDesktop("homewire could not be opened", err.Error())
+	}
+	return err
+}
+
+// openHub opens the web UI of the hub whose data is in dataDir, or prints
+// its link; with notify, a browser which cannot be opened is told with a
+// desktop notification too.
+func openHub(dataDir string, printOnly bool, host string, notify bool) error {
+	dir, err := resolveClientDataDir(dataDir)
 	if err != nil {
 		return err
 	}
@@ -44,9 +56,9 @@ func openCommand(args []string) error {
 
 	base := c.info.URL
 	switch {
-	case *host != "":
-		base = c.info.hostURL(*host)
-	case *printOnly && !c.info.loopbackOnly():
+	case host != "":
+		base = c.info.hostURL(host)
+	case printOnly && !c.info.loopbackOnly():
 		if name := localHostName(); name != "" {
 			base = c.info.hostURL(name)
 		}
@@ -66,7 +78,7 @@ func openCommand(args []string) error {
 		note = fmt.Sprintf("The link signs one browser in, once, within %s.", time.Until(code.ExpiresAt).Round(time.Second))
 	}
 
-	if *printOnly {
+	if printOnly {
 		fmt.Println(link)
 		if note != "" {
 			fmt.Fprintln(os.Stderr, note)
@@ -79,8 +91,21 @@ func openCommand(args []string) error {
 		if note != "" {
 			fmt.Fprintln(os.Stderr, note)
 		}
+		if notify {
+			notifyDesktop("homewire could not open a browser", err.Error())
+		}
 	}
 	return nil
+}
+
+// notifyDesktop shows a desktop notification, when the session has
+// notify-send; it does nothing otherwise. Tests replace it.
+var notifyDesktop = func(summary, body string) {
+	path, err := exec.LookPath("notify-send")
+	if err != nil {
+		return
+	}
+	_ = exec.Command(path, "--app-name=homewire", "--icon=homewire", summary, body).Run()
 }
 
 // localHostName returns the name under which other machines on the home

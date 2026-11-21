@@ -43,6 +43,8 @@ homewire status
 homewire open -print
 ```
 
+- **Launcher.** The package also adds **homewire** to the desktop's applications (in GNOME, the app grid), with its icon. It runs `homewire open -notify`, which tells with a desktop notification when the hub cannot be opened, such as when it is not running or the user is not yet in the group `homewire`.
+
 `sudo apt remove homewire` stops the service and keeps its data; `sudo apt purge homewire` deletes `/var/lib/homewire` and the user too. A device commissioned into a purged fabric has to be reset to factory defaults to be added again.
 
 ## Build and run
@@ -350,7 +352,7 @@ GOWORK=off go build ./... && GOWORK=off go test ./...
 | `internal/hub` | The hub: its fabric, the sessions and subscriptions with the nodes, their state, and the commands sent to them |
 | `internal/auth` | Access token file, bearer and session authentication |
 | `internal/server` | HTTP API, event stream, Host and Origin checks, web UI serving |
-| `packaging` | systemd unit, `/etc/default/homewire`, the package's install scripts, and the test of the installed package run by CI |
+| `packaging` | systemd unit, `/etc/default/homewire`, the desktop launcher and the icons (`packaging/icons`, made from `homewire.svg` and, for 16 to 24 px, `homewire-small.svg`), the package's install scripts, and the test of the installed package run by CI |
 | `web` | Svelte + Vite + TypeScript UI; `web/dist` is embedded |
 | `docs/images` | The screenshots of the README |
 

@@ -143,7 +143,14 @@
 
 <header>
   <div class="brand">
-    <span class="mark" aria-hidden="true"></span>
+    <svg class="mark" viewBox="0 0 32 32" aria-hidden="true">
+      <path class="house" d="M3 15 L16 4 L29 15 M6.5 13 V28 H25.5 V13" />
+      <path class="wires" d="M16 18.5 L11.5 22 M16 18.5 L20.5 22 M16 18.5 V13.5" />
+      <circle cx="16" cy="18.5" r="2.6" />
+      <circle cx="11.5" cy="22" r="1.9" />
+      <circle cx="20.5" cy="22" r="1.9" />
+      <circle cx="16" cy="13" r="1.9" />
+    </svg>
     <h1>homewire</h1>
   </div>
   <div class="meta">
@@ -242,10 +249,30 @@
   }
 
   .mark {
-    width: 0.9rem;
-    height: 0.9rem;
-    border-radius: 50%;
-    border: 3px solid var(--accent);
+    width: 1.5rem;
+    height: 1.5rem;
+    color: var(--accent);
+    flex: none;
+  }
+
+  .mark .house,
+  .mark .wires {
+    fill: none;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .mark .house {
+    stroke-width: 2.8;
+  }
+
+  .mark .wires {
+    stroke-width: 1.6;
+  }
+
+  .mark circle {
+    fill: currentColor;
   }
 
   h1 {
