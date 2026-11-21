@@ -16,7 +16,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Changed
 
-- Uses go-matter v0.9.9. The requests to a node take the context of the HTTP request.
+- Uses go-matter v0.9.10, with the security updates of go-ble v0.9.3 and go-mdns v1.0.1. The requests to a node take the context of the HTTP request.
 - After a device is removed, the hub says that a device another app still has is added again with that app's code, without a reset.
 - The snapshot version of a package build is a semver pre-release (`0.9.1-dev.<commit>`); the .deb still sorts it before the release.
 
