@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=homewire
+GenericName=Matter hub
+Comment=Open the web UI of the homewire Matter hub
+Exec=homewire open -notify
+Icon=homewire
+Terminal=false
+Categories=Network;Utility;
+Keywords=Matter;smart home;hub;light;
+StartupNotify=false

@@ -239,3 +239,28 @@ func TestServeInfoInAServiceDataDir(t *testing.T) {
 		t.Fatalf("serve.json: %v, %v", fi.Mode(), err)
 	}
 }
+
+func TestOpenNotify(t *testing.T) {
+	var got []string
+	restore := notifyDesktop
+	notifyDesktop = func(summary, body string) { got = append(got, summary+": "+body) }
+	t.Cleanup(func() { notifyDesktop = restore })
+
+	// Without a running hub, the failure is told with a notification.
+	dir := t.TempDir()
+	if err := run([]string{"open", "-notify", "-data-dir", dir}, &bytes.Buffer{}); !errors.Is(err, errNotRunning) {
+		t.Fatalf("open -notify without a hub: %v", err)
+	}
+	if len(got) != 1 || !strings.HasPrefix(got[0], "homewire could not be opened: ") {
+		t.Fatalf("notifications %q", got)
+	}
+
+	// Without -notify, nothing is shown.
+	got = nil
+	if err := run([]string{"open", "-data-dir", dir}, &bytes.Buffer{}); !errors.Is(err, errNotRunning) {
+		t.Fatalf("open without a hub: %v", err)
+	}
+	if len(got) != 0 {
+		t.Fatalf("notifications without -notify: %q", got)
+	}
+}

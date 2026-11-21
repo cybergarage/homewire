@@ -68,6 +68,53 @@ nfpms:
         type: config|noreplace
         file_info:
           mode: 0644
+      # The launcher of the app grid runs `homewire open`. GNOME's icon and
+      # desktop caches are refreshed by the triggers of hicolor-icon-theme
+      # and desktop-file-utils.
+      - src: packaging/homewire.desktop
+        dst: /usr/share/applications/homewire.desktop
+        file_info:
+          mode: 0644
+      - src: packaging/icons/homewire.svg
+        dst: /usr/share/icons/hicolor/scalable/apps/homewire.svg
+        file_info:
+          mode: 0644
+      - src: packaging/icons/homewire-16.png
+        dst: /usr/share/icons/hicolor/16x16/apps/homewire.png
+        file_info:
+          mode: 0644
+      - src: packaging/icons/homewire-22.png
+        dst: /usr/share/icons/hicolor/22x22/apps/homewire.png
+        file_info:
+          mode: 0644
+      - src: packaging/icons/homewire-24.png
+        dst: /usr/share/icons/hicolor/24x24/apps/homewire.png
+        file_info:
+          mode: 0644
+      - src: packaging/icons/homewire-32.png
+        dst: /usr/share/icons/hicolor/32x32/apps/homewire.png
+        file_info:
+          mode: 0644
+      - src: packaging/icons/homewire-48.png
+        dst: /usr/share/icons/hicolor/48x48/apps/homewire.png
+        file_info:
+          mode: 0644
+      - src: packaging/icons/homewire-64.png
+        dst: /usr/share/icons/hicolor/64x64/apps/homewire.png
+        file_info:
+          mode: 0644
+      - src: packaging/icons/homewire-128.png
+        dst: /usr/share/icons/hicolor/128x128/apps/homewire.png
+        file_info:
+          mode: 0644
+      - src: packaging/icons/homewire-256.png
+        dst: /usr/share/icons/hicolor/256x256/apps/homewire.png
+        file_info:
+          mode: 0644
+      - src: packaging/icons/homewire-512.png
+        dst: /usr/share/icons/hicolor/512x512/apps/homewire.png
+        file_info:
+          mode: 0644
       - src: README.md
         dst: /usr/share/doc/homewire/README.md
         file_info:

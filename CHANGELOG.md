@@ -12,6 +12,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - **Adding a device another app shares**, with that app's setup code, over the network.
 - **The stages of Add device.** The dialog shows where a commissioning is (discovering, connecting, PASE, attestation, credentials, network, operational discovery, CASE), and where one failed.
 - **Why a device could not join Wi-Fi.** A commissioning which fails because the device could not join the network ends with `wifi_failed`, and the reason the device gave, such as a wrong password or a network it does not find, is shown in plain words.
+- **An icon, and a launcher in the desktop's applications.** The package installs `homewire.desktop` and the icon in every size; the launcher runs `homewire open -notify`, which tells a failure with a desktop notification. The web UI's header and the browser tab show the icon.
 - Screenshots of the web UI in the README.
 - The README tells what to do with a device which does not get back on the Wi-Fi network after it drops.
 

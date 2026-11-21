@@ -38,6 +38,13 @@ sudo sh -c "stat -c '%U:%G %a %n' /var/lib/homewire /var/lib/homewire/*"
 [ "$(sudo stat -c '%a' /var/lib/homewire/fabric.json)" = "600" ] || fail "fabric.json is not mode 0600"
 [ "$(sudo stat -c '%a' /var/lib/homewire/serve.json)" = "640" ] || fail "serve.json is not mode 0640"
 
+echo "== launcher and icon"
+test -f /usr/share/applications/homewire.desktop || fail "no launcher in /usr/share/applications"
+grep -qx 'Exec=homewire open -notify' /usr/share/applications/homewire.desktop || fail "the launcher does not run homewire open -notify"
+test -f /usr/share/icons/hicolor/scalable/apps/homewire.svg || fail "no scalable icon"
+test -f /usr/share/icons/hicolor/48x48/apps/homewire.png || fail "no 48x48 icon"
+if command -v desktop-file-validate >/dev/null; then desktop-file-validate /usr/share/applications/homewire.desktop || fail "the launcher is not valid"; fi
+
 echo "== homewire status by a member of the homewire group"
 sudo usermod -a -G homewire "$(id -un)"
 sg homewire -c "homewire status" || fail "homewire status failed"
