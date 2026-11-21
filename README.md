@@ -85,7 +85,7 @@ The hub is a Matter controller with a fabric of its own. It does not use the sto
 
 - **First start.** The hub creates its fabric in the data directory (`fabric.json`) and logs its ID. Later starts use that fabric; it is never replaced. A data directory which holds commissioned nodes but no fabric is refused.
 - **Nodes.** At every start the hub connects to each node commissioned into its fabric (`commissions/` in the data directory) and subscribes to all its attributes. It keeps the last value of every attribute in memory.
-- **Status.** A node is `connecting` until its first report, `online` while reports arrive, and `offline` when it cannot be reached or its subscription is lost. The hub keeps trying, waiting from 2 seconds up to 2 minutes between attempts, and keeps the last values meanwhile.
+- **Status.** A node is `connecting` until its first report, `online` while reports arrive, and `offline` when it cannot be reached or its subscription is lost. The hub keeps trying, waiting from 2 seconds up to 2 minutes between attempts, and keeps the last values meanwhile. It reconnects as soon as the device can be reached again. After the Wi-Fi network drops, some devices do not get back on it by themselves, or stay half-connected, sending but not receiving: turn such a device off and on again.
 - **Log.** A change of status and every changed attribute is logged:
 
 ```

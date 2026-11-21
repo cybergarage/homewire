@@ -13,6 +13,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - **The stages of Add device.** The dialog shows where a commissioning is (discovering, connecting, PASE, attestation, credentials, network, operational discovery, CASE), and where one failed.
 - **Why a device could not join Wi-Fi.** A commissioning which fails because the device could not join the network ends with `wifi_failed`, and the reason the device gave, such as a wrong password or a network it does not find, is shown in plain words.
 - Screenshots of the web UI in the README.
+- The README tells what to do with a device which does not get back on the Wi-Fi network after it drops.
 
 ### Changed
 
