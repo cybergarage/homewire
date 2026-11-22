@@ -15,6 +15,16 @@ homewire is a Matter hub for the home network, built on [go-matter](https://gith
 
 Not supported yet: Thread devices, automations, remote access and TLS in the hub itself.
 
+homewire is for personal use on a home network you trust; it is not a certified commercial controller.
+
+## Compatibility
+
+| | Verified |
+| --- | --- |
+| Other apps (multi-admin) | Google Home, in both directions: a device shared from homewire, and one Google Home shares. Amazon Alexa, Apple Home, SmartThings and Home Assistant are not verified yet |
+| Devices | Two Wi-Fi light bulbs of different vendors, added over Bluetooth and over the network |
+| Hosts | Ubuntu on amd64, with BlueZ; the arm64 package is built but not tested on a device yet |
+
 ## Install
 
 The .deb packages are on the [releases page](https://github.com/cybergarage/homewire/releases) (Debian or Ubuntu with systemd). Download and install the one of this host's architecture:
@@ -60,6 +70,12 @@ See [using homewire](docs/usage.md) for the details, such as a device which cann
 | [Development](docs/development.md) | Building from source, testing, and the layout of the repository |
 | [CHANGELOG](CHANGELOG.md) | The changes of each release |
 
+## Certification and trademarks
+
+Matter is a trademark of the [Connectivity Standards Alliance](https://csa-iot.org/) (CSA). homewire is an independent open-source project: it is not affiliated with, endorsed by or certified by the CSA. A product built on it needs CSA membership and certification to be sold as a Matter product or to use the Matter name and logo.
+
+The hub creates its fabric with the vendor ID 0xFFF1 by default (`-vendor-id`), a test vendor ID for development; a product uses the vendor ID the CSA assigned to its maker.
+
 ## License
 
-Apache License 2.0. See [LICENSE](LICENSE).
+Apache License 2.0. See [LICENSE](LICENSE). The executable includes third-party software: see [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md), also installed in `/usr/share/doc/homewire`.

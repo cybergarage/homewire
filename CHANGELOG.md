@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Changed
 
+- Compatibility, certification and trademark notices in the README, and `THIRD_PARTY_NOTICES.md`, also installed in `/usr/share/doc/homewire`, for the third-party software the executable includes.
 - The README is a short landing page: features, install from the release with `curl`, use and the documentation. The details moved, unchanged, to `docs/`: usage, commands and options, access control, the API and development.
 
 ## [1.0.0] - 2026-11-22

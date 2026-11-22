@@ -38,6 +38,8 @@ sudo sh -c "stat -c '%U:%G %a %n' /var/lib/homewire /var/lib/homewire/*"
 [ "$(sudo stat -c '%a' /var/lib/homewire/fabric.json)" = "600" ] || fail "fabric.json is not mode 0600"
 [ "$(sudo stat -c '%a' /var/lib/homewire/serve.json)" = "640" ] || fail "serve.json is not mode 0640"
 
+test -f /usr/share/doc/homewire/THIRD_PARTY_NOTICES.md || fail "no third-party notices"
+
 echo "== launcher and icon"
 test -f /usr/share/applications/homewire.desktop || fail "no launcher in /usr/share/applications"
 grep -qx 'Exec=homewire open -notify' /usr/share/applications/homewire.desktop || fail "the launcher does not run homewire open -notify"

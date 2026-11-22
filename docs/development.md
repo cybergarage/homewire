@@ -20,6 +20,10 @@ make test       # gofmt, go vet, go test -race
 go test -short ./...  # without the test which needs mDNS on the network
 make check-web  # svelte-check
 
+## Third-party notices
+
+`THIRD_PARTY_NOTICES.md` lists the Go modules built into the executable (`go version -m bin/homewire`), the Go standard library and the JavaScript bundled into the web UI, with their licenses. Update it when a dependency is added, removed or upgraded.
+
 ## Layout
 
 | Path | Role |
