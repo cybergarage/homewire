@@ -30,6 +30,7 @@ homewire is for personal use on a home network you trust; it is not a certified 
 The .deb packages are on the [releases page](https://github.com/cybergarage/homewire/releases) (Debian or Ubuntu with systemd). Download and install the one of this host's architecture:
 
 ```sh
+cd /tmp                              # a directory apt's own user can read
 VERSION=1.0.0
 ARCH=$(dpkg --print-architecture)    # amd64 or arm64
 curl -LO https://github.com/cybergarage/homewire/releases/download/v${VERSION}/homewire_${VERSION}_${ARCH}.deb
