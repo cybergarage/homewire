@@ -1,7 +1,4 @@
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/images/logo-dark.png">
-  <img src="docs/images/logo-light.png" alt="homewire" width="292">
-</picture>
+<img src="docs/images/logo-light.png" alt="homewire" width="325">
 
 [![Release](https://img.shields.io/github/v/release/cybergarage/homewire)](https://github.com/cybergarage/homewire/releases/latest) [![CI](https://github.com/cybergarage/homewire/actions/workflows/ci.yml/badge.svg)](https://github.com/cybergarage/homewire/actions/workflows/ci.yml)
 
