@@ -49,7 +49,7 @@ homewire open -print
 
 ## Build and run
 
-Go 1.25 or later, and Node.js 22 or later with npm. The hub depends on go-matter v0.9.10.
+Go 1.25 or later, and Node.js 22 or later with npm. The hub depends on go-matter v1.0.0.
 
 ```sh
 make build             # builds web/dist, then bin/homewire
