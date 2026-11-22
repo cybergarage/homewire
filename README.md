@@ -1,4 +1,9 @@
-# <img src="packaging/icons/homewire-128.png" alt="homewire" width="48" align="center"> homewire
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/logo-dark.png">
+  <img src="docs/images/logo-light.png" alt="homewire" width="292">
+</picture>
+
+[![Release](https://img.shields.io/github/v/release/cybergarage/homewire)](https://github.com/cybergarage/homewire/releases/latest) [![CI](https://github.com/cybergarage/homewire/actions/workflows/ci.yml/badge.svg)](https://github.com/cybergarage/homewire/actions/workflows/ci.yml)
 
 homewire is a Matter hub for the home network, built on [go-matter](https://github.com/cybergarage/go-matter). It adds Matter devices over Bluetooth or the network, and controls them from a web UI in the browser or an HTTP API. It runs as one executable, `homewire`, on a Linux host of the home network.
 
