@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-11-22
+
+The first stable release, with go-matter v1.0.0: a Matter hub which adds devices over Bluetooth or the network, controls lights, and shares its devices with Google Home, Amazon Alexa and other apps (multi-admin, verified with Google Home). Distributed as .deb packages for amd64 and arm64.
+
 ### Added
 
 - **Sharing a device with another app or hub** (Matter multi-admin). **Share with another app…** on a device's card opens a pairing window on the device for 10 minutes, with a QR code and an 11-digit setup code, for Google Home, Amazon Alexa, Apple Home or SmartThings to add the device as well; the hub stays in control. `POST` and `DELETE /api/v1/nodes/{id}/share`. The codes are neither logged nor kept.
@@ -18,7 +22,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Changed
 
-- Uses go-matter v0.9.10, with the security updates of go-ble v0.9.3 and go-mdns v1.0.1. The requests to a node take the context of the HTTP request.
+- Uses go-matter v1.0.0, with the security updates of go-ble v0.9.3 and go-mdns v1.0.1. The requests to a node take the context of the HTTP request.
 - After a device is removed, the hub says that a device another app still has is added again with that app's code, without a reset.
 - The snapshot version of a package build is a semver pre-release (`0.9.1-dev.<commit>`); the .deb still sorts it before the release.
 
@@ -43,5 +47,6 @@ The first release: a Matter hub with a fabric of its own, a web UI and an HTTP A
 - `homewire serve`, `open`, `status` and `token`.
 - A .deb package for amd64 and arm64 with a hardened systemd service, running as the user `homewire`, with its data in `/var/lib/homewire`.
 
-[Unreleased]: https://github.com/cybergarage/homewire/compare/v0.9.0...HEAD
+[Unreleased]: https://github.com/cybergarage/homewire/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/cybergarage/homewire/compare/v0.9.0...v1.0.0
 [0.9.0]: https://github.com/cybergarage/homewire/releases/tag/v0.9.0
