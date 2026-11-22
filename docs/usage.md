@@ -22,7 +22,7 @@ level=INFO msg="attribute changed" node=0000000016A5E84A endpoint=1 cluster=0x00
 
 **Add device** in the web UI takes the device's setup code: the text of its QR code (`MT:...`) or the 11- or 21-digit manual pairing code printed beside it.
 
-<img src="docs/images/add-device.png" alt="Add device: the setup code, and the Wi-Fi network for a new device" width="380">
+<img src="docs/images/add-device.png" alt="Add device: the setup code, and the Wi-Fi network for a new device" width="570">
 
 - **A new device**, not on any network yet, is found over Bluetooth and given the Wi-Fi network it is to join. The host of the hub needs a Bluetooth adapter (BlueZ on Linux), and most devices join a 2.4 GHz network only. The browser remembers the network name; the password is handed to the device and not stored.
 - **A device already on the network**, Wi-Fi or Ethernet, is found by mDNS. It has to be waiting to be set up: new from the factory or reset, or with a pairing window opened from another app or hub it is set up with.
@@ -39,7 +39,7 @@ A device of the hub can be added to another app or hub as well, such as Google H
 2. In the other app, add a Matter device, and scan the QR code or type the setup code. The code works once, while the window is open.
 3. The device then belongs to both. **Close the window** ends sharing early.
 
-<img src="docs/images/share.png" alt="Sharing a device: the QR code and the setup code of its pairing window" width="380">
+<img src="docs/images/share.png" alt="Sharing a device: the QR code and the setup code of its pairing window" width="570">
 
 The other way round works too: in the other app, open a pairing window for a device it has (in Google Home, *Linked Matter apps & services*), and add it to the hub with **Add device** and that code. The device is found on the network.
 

@@ -2,7 +2,7 @@
 
 homewire is a Matter hub for the home network, built on [go-matter](https://github.com/cybergarage/go-matter). It adds Matter devices over Bluetooth or the network, and controls them from a web UI in the browser or an HTTP API. It runs as one executable, `homewire`, on a Linux host of the home network.
 
-<img src="docs/images/devices.png" alt="The devices of the hub, with their controls" width="380">
+<img src="docs/images/devices.png" alt="The devices of the hub, with their controls" width="570">
 
 ## Features
 
