@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Changed
+
+- The README is a short landing page: features, install from the release with `curl`, use and the documentation. The details moved, unchanged, to `docs/`: usage, commands and options, access control, the API and development.
+
 ## [1.0.0] - 2026-11-22
 
 The first stable release, with go-matter v1.0.0: a Matter hub which adds devices over Bluetooth or the network, controls lights, and shares its devices with Google Home, Amazon Alexa and other apps (multi-admin, verified with Google Home). Distributed as .deb packages for amd64 and arm64.
