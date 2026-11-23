@@ -94,6 +94,8 @@
       'The device was found over Bluetooth only. Choose “New device” and give the Wi-Fi network it is to join.',
     not_in_commissioning_mode:
       'The device is on the network but not waiting to be set up. If another app or hub has it, open a pairing window there. Otherwise — after it was removed from this hub, or an earlier attempt failed midway — reset it to factory defaults.',
+    bluetooth_unavailable:
+      'No device was found, and Bluetooth is unavailable on the hub’s host: its adapter is missing, turned off or blocked. On a Raspberry Pi, run “sudo rfkill unblock bluetooth” there, then try again.',
     wifi_failed:
       'The device could not join the Wi-Fi network. Check its name and password, and reset the device before trying again.',
     timeout: 'The device did not finish in time. Keep it close to the hub and try again.',

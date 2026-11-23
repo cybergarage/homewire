@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Fixed
 
+- A device not found because Bluetooth is unavailable on the hub's host (its adapter missing, powered off or blocked by rfkill) fails with `bluetooth_unavailable`, and the web UI tells how to unblock it, instead of only "not found".
 - The package depends on BlueZ instead of recommending it: on the Raspberry Pi OS tested, BlueZ was not installed with the hub, which then had no Bluetooth, and its user was not added to the group `bluetooth`.
 - A user who is in the group `homewire`, from a session started before joining it, is told to sign out and in again (or `newgrp homewire`), instead of being told to join the group again.
 - `sudo homewire open` prints the link instead of starting a browser as root, which browsers refuse, often silently; `homewire open` without sudo opens it.
