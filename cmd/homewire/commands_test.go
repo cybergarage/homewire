@@ -264,3 +264,24 @@ func TestOpenNotify(t *testing.T) {
 		t.Fatalf("notifications without -notify: %q", got)
 	}
 }
+
+// Run with sudo, homewire open prints the link instead of starting a
+// browser as root.
+func TestOpenWithSudo(t *testing.T) {
+	if os.Geteuid() != 0 {
+		t.Skip("needs root")
+	}
+	dir, _ := runningHub(t)
+	t.Setenv("SUDO_USER", "someone")
+	opened := false
+	saved := openURL
+	openURL = func(string) error { opened = true; return nil }
+	t.Cleanup(func() { openURL = saved })
+
+	if err := run([]string{"open", "-data-dir", dir}, &bytes.Buffer{}); err != nil {
+		t.Fatal(err)
+	}
+	if opened {
+		t.Fatal("opened a browser as root")
+	}
+}
