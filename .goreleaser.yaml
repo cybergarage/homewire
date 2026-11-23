@@ -54,10 +54,13 @@ nfpms:
     formats:
       - deb
     bindir: /usr/bin
+    # BlueZ is a dependency, not a recommendation: on a system where it was
+    # not installed with the hub, as on the Raspberry Pi OS tested, the hub
+    # had no Bluetooth, and the group `bluetooth`, which the install script
+    # adds the hub's user to, did not exist yet.
     dependencies:
       - adduser
       - init-system-helpers
-    recommends:
       - bluez
     contents:
       - src: packaging/homewire.service
