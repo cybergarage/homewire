@@ -27,7 +27,7 @@ homewire is for personal use on a home network you trust; it is not a certified 
 | --- | --- |
 | Other apps (multi-admin) | Google Home, in both directions: a device shared from homewire, and one Google Home shares. Amazon Alexa, Apple Home, SmartThings and Home Assistant are not verified yet |
 | Devices | Two Wi-Fi light bulbs of different vendors, added over Bluetooth and over the network |
-| Hosts | Ubuntu on amd64, with BlueZ; the arm64 package is built but not tested on a device yet |
+| Hosts | Ubuntu 26.04 on an Intel PC (amd64); Raspberry Pi OS (64-bit) of 2026-10-06, Debian 13, on a Raspberry Pi 400 (arm64) |
 
 ## Install
 
@@ -52,7 +52,8 @@ homewire open                  # the web UI in a browser, signed in
 On a desktop, **homewire** in the applications (the app grid in GNOME) does the same as `homewire open`.
 
 - **Other machines.** The hub listens on this host only. To use it from another machine, set `HOMEWIRE_LISTEN=0.0.0.0:8580` in `/etc/default/homewire` and run `sudo systemctl restart homewire`; there, sign in with the link of `homewire open -print`.
-- **Bluetooth.** Adding a new device needs a Bluetooth adapter on the host (BlueZ); most devices join a 2.4 GHz Wi-Fi network only.
+- **Bluetooth.** Adding a new device needs a Bluetooth adapter on the host; the package installs BlueZ. Most devices join a 2.4 GHz Wi-Fi network only.
+- **Raspberry Pi.** Raspberry Pi OS blocks Bluetooth until it is unblocked: run `sudo rfkill unblock bluetooth`, then check that `bluetoothctl show` says `Powered: yes`. For Wi-Fi, set the country in `sudo raspi-config` (Localisation Options, WLAN Country).
 - **Log.** `journalctl -u homewire -f`.
 - **Remove.** `sudo apt remove homewire` keeps the hub's data in `/var/lib/homewire`; `sudo apt purge homewire` deletes it too, and the devices then have to be reset to factory defaults to be added again.
 

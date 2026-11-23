@@ -32,7 +32,7 @@ Each option can also be given in the environment, as `HOMEWIRE_` and the option'
 
 The .deb package installs `homewire` as a systemd service, `homewire.service`, and starts it.
 
-- **User.** The service runs as the system user `homewire`, created by the package. It is added to the group `bluetooth` when that group exists, so that it may use the Bluetooth adapter through BlueZ (package `bluez`, recommended).
+- **User.** The service runs as the system user `homewire`, created by the package. It is added to the group `bluetooth`, so that it may use the Bluetooth adapter through BlueZ (package `bluez`, a dependency of the package).
 - **Data.** The fabric, the commissioned nodes and the access token are kept in `/var/lib/homewire` (mode 0750, group `homewire`).
 - **Options.** `/etc/default/homewire` gives the options of `homewire serve`, as `HOMEWIRE_` variables; see [the options](#options-of-homewire-serve). By default the hub listens on `127.0.0.1:8580`, this host only; set `HOMEWIRE_LISTEN=0.0.0.0:8580` to reach it from other machines, then restart it with `sudo systemctl restart homewire`. An upgrade keeps the file.
 - **Commands.** `homewire open`, `status` and `token` read `/var/lib/homewire`, so they need membership of the group `homewire`:
