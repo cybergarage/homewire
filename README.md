@@ -21,13 +21,17 @@ Not supported yet: Thread devices, automations, remote access and TLS in the hub
 
 homewire is for personal use on a home network you trust; it is not a certified commercial controller.
 
-## Compatibility
+## Requirements
 
-| | Verified |
+| | |
 | --- | --- |
-| Other apps (multi-admin) | Google Home, in both directions: a device shared from homewire, and one Google Home shares. Amazon Alexa, Apple Home, SmartThings and Home Assistant are not verified yet |
-| Devices | Two Wi-Fi light bulbs of different vendors, added over Bluetooth and over the network |
-| Hosts | Ubuntu 26.04 on an Intel PC (amd64); Raspberry Pi OS (64-bit) of 2026-10-06, Debian 13, on a Raspberry Pi 400 (arm64) |
+| OS | Linux with systemd and .deb packages: Debian 12 or later, Ubuntu 22.04 or later, or Raspberry Pi OS (64-bit) |
+| CPU | amd64 (x86-64) or arm64 (64-bit ARM); 32-bit systems, such as the 32-bit Raspberry Pi OS, are not supported |
+| Bluetooth | A Bluetooth LE adapter, through BlueZ, which the package installs: to add a new device. A device already on the network is added without it |
+| Network | The same network as the devices, wired or Wi-Fi, where mDNS and IPv6 link-local addresses reach them |
+| Devices | Matter devices on Wi-Fi or Ethernet; Thread devices are not supported. Many devices join a 2.4 GHz Wi-Fi network only |
+| Browser | A current Chrome, Edge, Firefox or Safari |
+| Resources | About 10 MB of memory and 15 MB of disk |
 
 ## Install
 
@@ -37,7 +41,7 @@ The .deb packages are on the [releases page](https://github.com/cybergarage/home
 cd /tmp                              # a directory apt's own user can read
 VERSION=1.0.1
 ARCH=$(dpkg --print-architecture)    # amd64 or arm64
-curl -LO https://github.com/cybergarage/homewire/releases/download/v${VERSION}/homewire_${VERSION}_${ARCH}.deb
+curl -fLO https://github.com/cybergarage/homewire/releases/download/v${VERSION}/homewire_${VERSION}_${ARCH}.deb
 sudo apt install ./homewire_${VERSION}_${ARCH}.deb
 ```
 
@@ -64,6 +68,13 @@ On a desktop, **homewire** in the applications (the app grid in GNOME) does the 
 - **Remove device…** makes the device leave the hub's fabric.
 
 See [using homewire](docs/usage.md) for the details, such as a device which cannot be added again and what to do when a device does not recover after a Wi-Fi drop.
+
+## Verified
+
+| | |
+| --- | --- |
+| Hosts | Ubuntu 26.04 on an Intel PC (amd64); Raspberry Pi OS (64-bit) of 2026-10-06, Debian 13, on a Raspberry Pi 400 (arm64) |
+| Other apps (multi-admin) | Google Home, in both directions: a device shared from homewire, and one Google Home shares. Amazon Alexa, Apple Home, SmartThings and Home Assistant are not verified yet |
 
 ## Documentation
 

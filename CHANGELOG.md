@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Changed
+
+- The README tells the requirements (OS, CPU, Bluetooth, network, devices, browser) and, apart, what was verified; the install steps download with `curl -f`, which fails instead of saving an error page as the package.
+
 ## [1.0.1] - 2026-11-23
 
 Fixes found on a Raspberry Pi 400 with Raspberry Pi OS (64-bit): BlueZ is installed with the hub, and a hub without Bluetooth, or a user not signed in again after joining the group `homewire`, is told what to do. Also a new README, with a logo and notices.
