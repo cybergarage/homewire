@@ -85,6 +85,16 @@ func openHub(dataDir string, printOnly bool, host string, notify bool) error {
 		}
 		return nil
 	}
+	if user := os.Getenv("SUDO_USER"); os.Geteuid() == 0 && user != "" && user != "root" {
+		// A browser started as root is refused by Chromium and Firefox,
+		// often without a word, and would not be the user's anyway.
+		fmt.Fprintf(os.Stderr, "%s: not opening a browser as root; run \"homewire open\" without sudo, or open this link:\n", commandName)
+		fmt.Println(link)
+		if note != "" {
+			fmt.Fprintln(os.Stderr, note)
+		}
+		return nil
+	}
 	if err := openURL(link); err != nil {
 		fmt.Fprintf(os.Stderr, "%s: could not open a browser (%v); open this link:\n", commandName, err)
 		fmt.Println(link)

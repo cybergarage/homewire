@@ -44,7 +44,7 @@ sudo apt install ./homewire_${VERSION}_${ARCH}.deb
 The package starts the hub as the systemd service `homewire.service`. Let your user use it, then open the web UI:
 
 ```sh
-sudo adduser $USER homewire    # then sign out and in again
+sudo adduser $USER homewire    # then sign out and in again, or run: newgrp homewire
 homewire status                # the hub and its devices
 homewire open                  # the web UI in a browser, signed in
 ```

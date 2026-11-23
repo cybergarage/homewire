@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Fixed
+
+- A user who is in the group `homewire`, from a session started before joining it, is told to sign out and in again (or `newgrp homewire`), instead of being told to join the group again.
+- `sudo homewire open` prints the link instead of starting a browser as root, which browsers refuse, often silently; `homewire open` without sudo opens it.
+
 ### Changed
 
 - Compatibility, certification and trademark notices in the README, and `THIRD_PARTY_NOTICES.md`, also installed in `/usr/share/doc/homewire`, for the third-party software the executable includes.

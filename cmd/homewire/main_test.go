@@ -166,10 +166,22 @@ func TestClientDataDir(t *testing.T) {
 // A user who may not read the service's data directory is told how to be
 // given access, instead of being sent to a data directory of their own.
 func TestClientDataDirPermission(t *testing.T) {
+	savedMembership := groupMembership
+	t.Cleanup(func() { groupMembership = savedMembership })
+	groupMembership = func() membership { return notMember }
 	err := permissionHint(systemDataDir, &fs.PathError{Op: "open", Path: filepath.Join(systemDataDir, serveInfoFileName), Err: fs.ErrPermission})
 	if err == nil || !errors.Is(err, fs.ErrPermission) || !strings.Contains(err.Error(), "sudo adduser $USER homewire") {
 		t.Fatalf("permissionHint = %v", err)
 	}
+	// A member whose session predates the membership is told to sign in
+	// again, not to join the group it is in.
+	groupMembership = func() membership { return memberNotInSession }
+	err = permissionHint(systemDataDir, &fs.PathError{Op: "open", Path: filepath.Join(systemDataDir, serveInfoFileName), Err: fs.ErrPermission})
+	if err == nil || !errors.Is(err, fs.ErrPermission) || !strings.Contains(err.Error(), "newgrp homewire") || strings.Contains(err.Error(), "adduser") {
+		t.Fatalf("permissionHint for a member = %v", err)
+	}
+	groupMembership = func() membership { return notMember }
+
 	other := &fs.PathError{Op: "open", Path: "/srv/hub/serve.json", Err: fs.ErrPermission}
 	if err := permissionHint("/srv/hub", other); err != error(other) {
 		t.Fatalf("permissionHint for another directory = %v", err)

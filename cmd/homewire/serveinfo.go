@@ -21,7 +21,10 @@ import (
 	"io/fs"
 	"net"
 	"os"
+	"os/user"
 	"path/filepath"
+	"slices"
+	"strconv"
 	"time"
 
 	"github.com/cybergarage/homewire/internal/auth"
@@ -138,7 +141,46 @@ func permissionHint(dir string, err error) error {
 	if err == nil || !errors.Is(err, fs.ErrPermission) || filepath.Clean(dir) != filepath.Clean(systemDataDir) {
 		return err
 	}
+	if groupMembership() == memberNotInSession {
+		return fmt.Errorf("%w; you are in the group %s, but this session started before you were added to it: sign out and in again (or restart), or run \"newgrp %s\" in this terminal", err, serviceGroup, serviceGroup)
+	}
 	return fmt.Errorf("%w; the members of the group %s may read it: run \"sudo adduser $USER %s\", then sign in again", err, serviceGroup, serviceGroup)
+}
+
+// membership is whether the user is in the service's group.
+type membership int
+
+const (
+	notMember membership = iota
+	// memberNotInSession: the user is in the group, but this process,
+	// started from a session older than that, is not.
+	memberNotInSession
+	member
+)
+
+// groupMembership tells whether the user running this command is in the
+// service's group, and whether this process has it; tests replace it.
+var groupMembership = func() membership {
+	g, err := user.LookupGroup(serviceGroup)
+	if err != nil {
+		return notMember
+	}
+	gid, err := strconv.Atoi(g.Gid)
+	if err != nil {
+		return notMember
+	}
+	if gids, err := os.Getgroups(); err == nil && slices.Contains(gids, gid) {
+		return member
+	}
+	u, err := user.Current()
+	if err != nil {
+		return notMember
+	}
+	ids, err := u.GroupIds()
+	if err != nil || !slices.Contains(ids, g.Gid) {
+		return notMember
+	}
+	return memberNotInSession
 }
 
 func readServeInfoFile(path string) (serveInfo, error) {
