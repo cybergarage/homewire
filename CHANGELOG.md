@@ -15,6 +15,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Changed
 
+- Uses go-matter v1.0.1.
 - The README names the hosts it was verified on: Ubuntu 26.04 on an Intel PC, and Raspberry Pi OS (64-bit) of 2026-10-06 on a Raspberry Pi 400; and tells how to unblock Bluetooth on a Raspberry Pi.
 - Compatibility, certification and trademark notices in the README, and `THIRD_PARTY_NOTICES.md`, also installed in `/usr/share/doc/homewire`, for the third-party software the executable includes.
 - The README is a short landing page: features, install from the release with `curl`, use and the documentation. The details moved, unchanged, to `docs/`: usage, commands and options, access control, the API and development.
