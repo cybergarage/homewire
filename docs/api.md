@@ -103,7 +103,7 @@ curl -X POST -H 'Content-Type: application/json' \
  "error": "...", "errorCode": "failed"}
 ```
 
-`state` is `running`, `succeeded` (with `node`, the new node's ID) or `failed`, with `errorCode` one of `not_found`, `wifi_required` (found over Bluetooth only, and no Wi-Fi given), `wifi_failed` (the device told it could not join the Wi-Fi network; `error` names why, such as `AuthFailure` or `NetworkNotFound`), `not_in_commissioning_mode`, `timeout` and `failed`.
+`state` is `running`, `succeeded` (with `node`, the new node's ID) or `failed`, with `errorCode` one of `not_found`, `bluetooth_unavailable` (not found, and the hub could not search over Bluetooth: its adapter is missing, powered off or blocked), `wifi_required` (found over Bluetooth only, and no Wi-Fi given), `wifi_failed` (the device told it could not join the Wi-Fi network; `error` names why, such as `AuthFailure` or `NetworkNotFound`), `not_in_commissioning_mode`, `timeout` and `failed`.
 
 `step` is the last stage reached, the one a failed commissioning failed at. `stage` is, in order: `discovering` (over Bluetooth and on the network, round after round, for up to 30 seconds), `connecting`, `pase` (the session with the setup code), `attestation`, `credentials`, `network` (joining the Wi-Fi network; a device found over Bluetooth only), `operationalDiscovery` (finding the device on the network), `case` (the session with the hub's credentials) and `complete`. `attempt` counts the rounds of `discovering` and the attempts of `operationalDiscovery` and `case`; `detail`, for `case`, holds the addresses tried.
 

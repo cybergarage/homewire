@@ -8,12 +8,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Fixed
 
+- A device not found because Bluetooth is unavailable on the hub's host (its adapter missing, powered off or blocked by rfkill) fails with `bluetooth_unavailable`, and the web UI tells how to unblock it, instead of only "not found".
 - The package depends on BlueZ instead of recommending it: on the Raspberry Pi OS tested, BlueZ was not installed with the hub, which then had no Bluetooth, and its user was not added to the group `bluetooth`.
 - A user who is in the group `homewire`, from a session started before joining it, is told to sign out and in again (or `newgrp homewire`), instead of being told to join the group again.
 - `sudo homewire open` prints the link instead of starting a browser as root, which browsers refuse, often silently; `homewire open` without sudo opens it.
 
 ### Changed
 
+- Uses go-matter v1.0.1.
 - The README names the hosts it was verified on: Ubuntu 26.04 on an Intel PC, and Raspberry Pi OS (64-bit) of 2026-10-06 on a Raspberry Pi 400; and tells how to unblock Bluetooth on a Raspberry Pi.
 - Compatibility, certification and trademark notices in the README, and `THIRD_PARTY_NOTICES.md`, also installed in `/usr/share/doc/homewire`, for the third-party software the executable includes.
 - The README is a short landing page: features, install from the release with `curl`, use and the documentation. The details moved, unchanged, to `docs/`: usage, commands and options, access control, the API and development.

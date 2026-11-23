@@ -42,6 +42,9 @@ var (
 	// ErrWiFiJoinFailed is returned when the device told that it could
 	// not join the Wi-Fi network it was given, and why.
 	ErrWiFiJoinFailed = errors.New("the device could not join the Wi-Fi network")
+	// ErrBluetoothUnavailable is returned when no device was found, and the
+	// hub could not search over Bluetooth, where a new device is found.
+	ErrBluetoothUnavailable = errors.New("no device with this setup code was found, and Bluetooth is unavailable on the hub's host: its adapter is missing, powered off or blocked (on a Raspberry Pi, run \"sudo rfkill unblock bluetooth\")")
 )
 
 // CommissioningState is the state of a commissioning.
@@ -84,7 +87,7 @@ type Commissioning struct {
 	// NodeID is the node the device became, once commissioned.
 	NodeID uint64 `json:"-"`
 	// Error and ErrorCode say why a commissioning failed. ErrorCode is one
-	// of not_found, wifi_required, wifi_failed, not_in_commissioning_mode,
+	// of not_found, bluetooth_unavailable, wifi_required, wifi_failed, not_in_commissioning_mode,
 	// timeout and failed.
 	Error     string `json:"error,omitempty"`
 	ErrorCode string `json:"errorCode,omitempty"`
@@ -98,6 +101,8 @@ func commissioningErrorCode(err error) string {
 		return "wifi_failed"
 	case errors.Is(err, ErrNotInCommissioningMode):
 		return "not_in_commissioning_mode"
+	case errors.Is(err, ErrBluetoothUnavailable):
+		return "bluetooth_unavailable"
 	case errors.Is(err, ErrDeviceNotFound):
 		return "not_found"
 	case errors.Is(err, context.DeadlineExceeded):

@@ -242,6 +242,8 @@ func (c *MatterController) Commission(ctx context.Context, payload encoding.Onbo
 			return NodeRecord{}, commissioningError(ErrWiFiJoinFailed, err)
 		case errors.Is(err, matter.ErrFailed):
 			return NodeRecord{}, err
+		case errors.Is(err, matter.ErrBluetoothUnavailable):
+			return NodeRecord{}, commissioningError(ErrBluetoothUnavailable, err)
 		case errors.Is(err, matter.ErrNotFound):
 			return NodeRecord{}, commissioningError(ErrDeviceNotFound, err)
 		}

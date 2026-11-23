@@ -68,6 +68,7 @@ export type CommissioningErrorCode =
   | 'not_found'
   | 'wifi_required'
   | 'wifi_failed'
+  | 'bluetooth_unavailable'
   | 'not_in_commissioning_mode'
   | 'timeout'
   | 'failed';

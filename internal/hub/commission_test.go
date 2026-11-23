@@ -325,6 +325,12 @@ func TestCommissioningSteps(t *testing.T) {
 	}
 }
 
+func TestCommissioningErrorCodeBluetoothUnavailable(t *testing.T) {
+	if got := commissioningErrorCode(commissioningError(ErrBluetoothUnavailable, errors.New("bluetooth: adaptor is not powered"))); got != "bluetooth_unavailable" {
+		t.Fatalf("code = %q, want bluetooth_unavailable", got)
+	}
+}
+
 func TestCommissioningErrorCodeWiFiFailed(t *testing.T) {
 	if got := commissioningErrorCode(commissioningError(ErrWiFiJoinFailed, errors.New("LastNetworkingStatus=7 (AuthFailure)"))); got != "wifi_failed" {
 		t.Fatalf("code = %q, want wifi_failed", got)
