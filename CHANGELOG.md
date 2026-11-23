@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [1.0.1] - 2026-11-23
+
+Fixes found on a Raspberry Pi 400 with Raspberry Pi OS (64-bit): BlueZ is installed with the hub, and a hub without Bluetooth, or a user not signed in again after joining the group `homewire`, is told what to do. Also a new README, with a logo and notices.
+
 ### Fixed
 
 - A device not found because Bluetooth is unavailable on the hub's host (its adapter missing, powered off or blocked by rfkill) fails with `bluetooth_unavailable`, and the web UI tells how to unblock it, instead of only "not found".
@@ -61,6 +65,7 @@ The first release: a Matter hub with a fabric of its own, a web UI and an HTTP A
 - `homewire serve`, `open`, `status` and `token`.
 - A .deb package for amd64 and arm64 with a hardened systemd service, running as the user `homewire`, with its data in `/var/lib/homewire`.
 
-[Unreleased]: https://github.com/cybergarage/homewire/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/cybergarage/homewire/compare/v1.0.1...HEAD
+[1.0.1]: https://github.com/cybergarage/homewire/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/cybergarage/homewire/compare/v0.9.0...v1.0.0
 [0.9.0]: https://github.com/cybergarage/homewire/releases/tag/v0.9.0

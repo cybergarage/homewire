@@ -35,7 +35,7 @@ The .deb packages are on the [releases page](https://github.com/cybergarage/home
 
 ```sh
 cd /tmp                              # a directory apt's own user can read
-VERSION=1.0.0
+VERSION=1.0.1
 ARCH=$(dpkg --print-architecture)    # amd64 or arm64
 curl -LO https://github.com/cybergarage/homewire/releases/download/v${VERSION}/homewire_${VERSION}_${ARCH}.deb
 sudo apt install ./homewire_${VERSION}_${ARCH}.deb

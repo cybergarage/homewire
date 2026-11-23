@@ -17,4 +17,4 @@ package version
 
 // Version is the version of this build. A release build sets it with
 // -ldflags "-X github.com/cybergarage/homewire/internal/version.Version=...".
-var Version = "1.0.0"
+var Version = "1.0.1"
